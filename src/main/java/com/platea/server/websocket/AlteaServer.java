@@ -5,6 +5,8 @@ import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
 
+import com.platea.server.handler.MessageHandler;
+
 public class AlteaServer extends WebSocketServer {
     private int port;
 
@@ -26,6 +28,8 @@ public class AlteaServer extends WebSocketServer {
 
     @Override
     public void onMessage(WebSocket conn, String message) {
+        String response = MessageHandler.handleMessage(message);
+        conn.send(response);
     }
 
     @Override
