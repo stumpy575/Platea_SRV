@@ -1,0 +1,39 @@
+package com.platea.server.model;
+
+public class Zona {
+    private String id; // Ej: Z1
+    private String nom; // Ej: Platea
+    private String tipus; // Ej: numerada / general
+    private int aforament; // Ej: 40 / 60
+
+
+    // Constructor
+    public Zona(String id, String nom, String tipus, int aforament) {
+        this.id = id;
+        this.nom = nom;
+        this.tipus = tipus;
+        this.aforament = aforament;
+    }
+
+
+    public String getId() {
+        return id;
+    }
+
+
+    public String getNom() {
+        return nom;
+    }
+
+
+    public String getTipus() {
+        return tipus;
+    }
+
+
+    public int getAforament() {
+        return aforament;
+    }
+
+
+}

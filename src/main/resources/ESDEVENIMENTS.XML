@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cataleg>
+    <!-- Recintes amb les seves zones -->
+    <recintes>
+        <recinte id="R1" nom="Sala Petita">
+            <zona id="Z1" nom="Platea" tipus="numerada" aforament="60" />
+            <zona id="Z2" nom="Dempeus" tipus="general" aforament="40" />
+        </recinte>
+    </recintes>
+
+    <!-- Esdeveniments: cadascun indica el recinte on es fa -->
+    <esdeveniments>
+        <esdeveniment id="E1" recinte="R1">
+            <nom>Coses que no es diuen en un sopar</nom>
+            <dataHora>2026-11-21T21:30</dataHora>
+            <categoria>Monòleg</categoria>
+            <descripcio>Una hora d'humor sobre les converses incòmodes de cada dia.</descripcio>
+            <imatge>monoleg-sopar.jpg</imatge>
+            <tipusEntrades>
+                <tipusEntrada id="T1" nom="Platea" zona="Z1" preu="18.00" quota="50" />
+                <tipusEntrada id="T2" nom="Platea reduïda" zona="Z1" preu="14.00" quota="10" />
+                <tipusEntrada id="T3" nom="Dempeus" zona="Z2" preu="12.00" quota="40" />
+            </tipusEntrades>
+        </esdeveniment>
+    </esdeveniments>
+</cataleg>
