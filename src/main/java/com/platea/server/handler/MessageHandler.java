@@ -4,9 +4,6 @@ import com.google.gson.JsonParser;
 import com.platea.server.model.Evento;
 import com.platea.server.model.TipoEntrada;
 import com.platea.server.xml.CatalogoXmlReader;
-
-import netscape.javascript.JSException;
-
 import java.util.Collection;
 import java.util.List;
 
@@ -91,7 +88,7 @@ public class MessageHandler {
                 }
                 String eventoId = request.get("eventoId").getAsString();
                 // Comprobamos que no está vacío ""
-                if(eventoId.isBlank()) {
+                if (eventoId.isBlank()) {
                     return createErrorResponse("El eventoId es una cadena vacía.");
                 }
 
