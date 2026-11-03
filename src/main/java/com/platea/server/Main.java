@@ -19,7 +19,7 @@ public class Main {
 
         // Server Config
         int port = 3000;
-        AlteaServer alteaServer = new AlteaServer(port);
+        AlteaServer alteaServer = new AlteaServer(port, catalogoXmlReader);
         System.out.println("Iniciando servidor Altea...");
         alteaServer.start();
 

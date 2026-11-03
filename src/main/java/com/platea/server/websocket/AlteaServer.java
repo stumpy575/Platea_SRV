@@ -6,14 +6,17 @@ import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
 
 import com.platea.server.handler.MessageHandler;
+import com.platea.server.xml.CatalogoXmlReader;
 
 public class AlteaServer extends WebSocketServer {
     private int port;
+    private CatalogoXmlReader catalogoXmlReader;
 
-    public AlteaServer(int port) {
+    public AlteaServer(int port, CatalogoXmlReader catalogoXmlReader) {
 
         super(new InetSocketAddress(port));
         this.port = port;
+        this.catalogoXmlReader = catalogoXmlReader;
 
     }
 
@@ -28,7 +31,7 @@ public class AlteaServer extends WebSocketServer {
 
     @Override
     public void onMessage(WebSocket conn, String message) {
-        String response = MessageHandler.handleMessage(message);
+        String response = MessageHandler.handleMessage(message, catalogoXmlReader);
         conn.send(response);
     }
 

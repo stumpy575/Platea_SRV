@@ -1,12 +1,22 @@
 package com.platea.server.handler;
 
 import com.google.gson.JsonParser;
+import com.platea.server.model.Evento;
+import com.platea.server.model.TipoEntrada;
+import com.platea.server.xml.CatalogoXmlReader;
+
+import netscape.javascript.JSException;
+
+import java.util.Collection;
+import java.util.List;
+
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 
 public class MessageHandler {
-    public static String handleMessage(String message) {
+    public static String handleMessage(String message, CatalogoXmlReader catalogoXmlReader) {
         try {
             // Creamos un elemento JSON
             JsonElement element = JsonParser.parseString(message);
@@ -40,10 +50,75 @@ public class MessageHandler {
                 response.addProperty("type", "pong");
                 return response.toString();
             }
+
             // Si type es bounce:
             else if (type.equals("bounce")) {
                 return message;
             }
+
+            // Si type es getEventos:
+            else if (type.equals("getEventos")) {
+                Collection<Evento> values = catalogoXmlReader.getEventos().values();
+                JsonObject response = new JsonObject();
+                response.addProperty("type", "eventos");
+                JsonArray eventosArray = new JsonArray();
+                for (Evento e : values) {
+                    JsonObject evento = new JsonObject();
+                    evento.addProperty("id", e.getId());
+                    evento.addProperty("nom", e.getNom());
+                    evento.addProperty("recinte", e.getRecinte());
+                    evento.addProperty("dataHora", e.getDataHora().toString());
+                    evento.addProperty("categoria", e.getCategoria());
+                    evento.addProperty("descripcio", e.getDescripcio());
+                    evento.addProperty("imatge", e.getImatge());
+                    eventosArray.add(evento);
+                }
+                response.add("eventos", eventosArray);
+                return response.toString();
+            }
+
+            // Si type es getTiposEntrada:
+            else if (type.equals("getTiposEntrada")) {
+                // Si NO existe "eventoId" o su valor es null
+                if (!request.has("eventoId") || request.get("eventoId").isJsonNull()) {
+                    return createErrorResponse("No existe el evento o su valor es null.");
+                }
+                // Comprobamos que es un string (igual que arriba)
+                if (!request.get("eventoId").isJsonPrimitive()
+                        || !request.get("eventoId").getAsJsonPrimitive().isString()) {
+                    return createErrorResponse(
+                            "El valor eventoId no es un tipo primitivo o no es una cadena de texto.");
+                }
+                String eventoId = request.get("eventoId").getAsString();
+                // Comprobamos que no está vacío ""
+                if(eventoId.isBlank()) {
+                    return createErrorResponse("El eventoId es una cadena vacía.");
+                }
+
+                Evento evento = catalogoXmlReader.getEventos().get(eventoId);
+
+                if (evento == null) {
+                    return createErrorResponse("No se ha encontrado ningún evento.");
+                }
+                List<TipoEntrada> listaTipoEntrada = evento.getTipusEntrades();
+                JsonObject response = new JsonObject();
+                response.addProperty("type", "tiposEntrada");
+                response.addProperty("eventoId", eventoId);
+                JsonArray tiposEntradaArray = new JsonArray();
+
+                for (TipoEntrada e : listaTipoEntrada) {
+                    JsonObject entrada = new JsonObject();
+                    entrada.addProperty("id", e.getId());
+                    entrada.addProperty("nom", e.getNom());
+                    entrada.addProperty("zona", e.getZona());
+                    entrada.addProperty("preu", e.getPreu());
+                    entrada.addProperty("disponibles", e.getQuota());
+                    tiposEntradaArray.add(entrada);
+                }
+                response.add("tiposEntrada", tiposEntradaArray);
+                return response.toString();
+            }
+
             // Si no es ni type ni bounce
             else {
                 return createErrorResponse("Tipo de mensaje desconocido.");
@@ -55,13 +130,8 @@ public class MessageHandler {
         }
     }
 
-
-
-
-
-
     // **** MÉTODOS ÚTILES ****
-    
+
     // Método para gestionar los type error de JSONs con mensaje personalizado.
     private static String createErrorResponse(String errorMessage) {
         JsonObject jsonError = new JsonObject();
