@@ -3,9 +3,11 @@ package com.platea.server.handler;
 import com.google.gson.JsonParser;
 import com.platea.server.model.Evento;
 import com.platea.server.model.TipoEntrada;
+import com.platea.server.reservas.ReservasManager;
 import com.platea.server.xml.CatalogoXmlReader;
 import java.util.Collection;
 import java.util.List;
+import java.io.IOException;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -13,7 +15,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 
 public class MessageHandler {
-    public static String handleMessage(String message, CatalogoXmlReader catalogoXmlReader) {
+    public static String handleMessage(String message, CatalogoXmlReader catalogoXmlReader,
+            ReservasManager reservasManager) {
         try {
             // Creamos un elemento JSON
             JsonElement element = JsonParser.parseString(message);
@@ -109,11 +112,31 @@ public class MessageHandler {
                     entrada.addProperty("nom", e.getNom());
                     entrada.addProperty("zona", e.getZona());
                     entrada.addProperty("preu", e.getPreu());
-                    entrada.addProperty("disponibles", e.getQuota());
+
+                    // Calculamos las entradas disponibles descontando las reservas
+                    int disponibles;
+
+                    try {
+                        disponibles = reservasManager.getDisponibles(eventoId, e);
+                    } catch (IOException ex) {
+                        return createErrorResponse("No se ha podido consultar la disponibilidad.");
+                    }
+
+                    entrada.addProperty("disponibles", disponibles);
                     tiposEntradaArray.add(entrada);
                 }
                 response.add("tiposEntrada", tiposEntradaArray);
                 return response.toString();
+            }
+
+            // ********** COMPRAR ENTRADAS **********
+
+            // Si type es comprarEntradas:
+            else if (type.equals("comprarEntradas")) {
+
+                // Enviamos los datos al gestor de reservas
+                // Este comprueba la compra, genera los localizadores y guarda el JSON
+                return reservasManager.comprarEntradas(request);
             }
 
             // Si no es ni type ni bounce
