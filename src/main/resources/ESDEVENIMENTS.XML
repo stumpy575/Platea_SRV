@@ -22,5 +22,144 @@
                 <tipusEntrada id="T3" nom="Dempeus" zona="Z2" preu="12.00" quota="40" />
             </tipusEntrades>
         </esdeveniment>
+
+        <!-- Monólogos: título largo, tres tipos de entrada -->
+        <esdeveniment id="E2" recinte="R1">
+            <nom>Monólogos de Sobremesa: Historias que Nunca Contarías en una Cena Familiar</nom>
+            <dataHora>2026-11-13T21:00</dataHora>
+            <categoria>Monólogo</categoria>
+            <descripcio>Dos cómicos se enfrentan en un duelo de improvisación con el público como jurado.</descripcio>
+            <imatge>duelo-monologos.jpg</imatge>
+            <tipusEntrades>
+                <tipusEntrada id="T4" nom="Dempeus" zona="Z2" preu="12.00" quota="40" />
+                <tipusEntrada id="T5" nom="Platea" zona="Z1" preu="16.00" quota="60" />
+                <tipusEntrada id="T6" nom="Platea reducida" zona="Z1" preu="13.00" quota="15" />
+            </tipusEntrades>
+        </esdeveniment>
+
+        <!-- Música: solo dos tipos de entrada -->
+        <esdeveniment id="E3" recinte="R1">
+            <nom>Noche de Jazz y Vinilo</nom>
+            <dataHora>2026-11-20T20:30</dataHora>
+            <categoria>Música</categoria>
+            <descripcio>Un cuarteto de jazz interpreta clásicos de los años cincuenta en un ambiente cercano.</descripcio>
+            <imatge>jazz-vinilo.jpg</imatge>
+            <tipusEntrades>
+                <tipusEntrada id="T7" nom="Platea" zona="Z1" preu="22.00" quota="45" />
+                <tipusEntrada id="T8" nom="Dempeus" zona="Z2" preu="16.00" quota="30" />
+            </tipusEntrades>
+        </esdeveniment>
+
+        <!-- Teatro: descripción larga y cuatro tipos de entrada -->
+        <esdeveniment id="E4" recinte="R1">
+            <nom>Microteatro: Cinco Historias Cortas</nom>
+            <dataHora>2026-11-28T19:30</dataHora>
+            <categoria>Teatro</categoria>
+            <descripcio>Cinco piezas breves de diez minutos cada una recorren el humor, el drama y la sorpresa. El público cambia de sala entre historia e historia y descubre un final distinto en cada pase.</descripcio>
+            <imatge>microteatro.jpg</imatge>
+            <tipusEntrades>
+                <tipusEntrada id="T9" nom="Platea" zona="Z1" preu="18.00" quota="50" />
+                <tipusEntrada id="T10" nom="Platea reducida" zona="Z1" preu="14.00" quota="10" />
+                <tipusEntrada id="T11" nom="Dempeus" zona="Z2" preu="12.00" quota="40" />
+                <tipusEntrada id="T12" nom="Abono dos funciones" zona="Z1" preu="28.00" quota="25" />
+            </tipusEntrades>
+        </esdeveniment>
+
+        <!-- Danza: dos tipos de entrada -->
+        <esdeveniment id="E5" recinte="R1">
+            <nom>Danza Contemporánea: Cuerpos en Movimiento</nom>
+            <dataHora>2026-12-05T21:00</dataHora>
+            <categoria>Danza</categoria>
+            <descripcio>Seis bailarines exploran el movimiento y el espacio con música en directo.</descripcio>
+            <imatge>danza-contemporanea.jpg</imatge>
+            <tipusEntrades>
+                <tipusEntrada id="T13" nom="Platea" zona="Z1" preu="20.00" quota="40" />
+                <tipusEntrada id="T14" nom="Dempeus" zona="Z2" preu="15.00" quota="25" />
+            </tipusEntrades>
+        </esdeveniment>
+
+        <!-- Magia: un único tipo de entrada -->
+        <esdeveniment id="E6" recinte="R1">
+            <nom>Magia de Cerca: Sesión Íntima</nom>
+            <dataHora>2026-12-09T19:00</dataHora>
+            <categoria>Magia</categoria>
+            <descripcio>Un mago actúa a menos de tres metros del público en una sesión para treinta personas.</descripcio>
+            <imatge>magia-cerca.jpg</imatge>
+            <tipusEntrades>
+                <tipusEntrada id="T15" nom="Platea" zona="Z1" preu="25.00" quota="30" />
+            </tipusEntrades>
+        </esdeveniment>
+
+        <!-- Infantil: tarifas por edad y pack familiar -->
+        <esdeveniment id="E7" recinte="R1">
+            <nom>Cuentacuentos: El Bosque Encantado</nom>
+            <dataHora>2026-11-22T12:00</dataHora>
+            <categoria>Infantil</categoria>
+            <descripcio>Una hora de cuentos, títeres y canciones para toda la familia.</descripcio>
+            <imatge>bosque-encantado.jpg</imatge>
+            <tipusEntrades>
+                <tipusEntrada id="T16" nom="Entrada infantil" zona="Z1" preu="8.00" quota="40" />
+                <tipusEntrada id="T17" nom="Entrada adulto" zona="Z1" preu="12.00" quota="40" />
+                <tipusEntrada id="T18" nom="Pack familiar (4 personas)" zona="Z1" preu="30.00" quota="15" />
+            </tipusEntrades>
+        </esdeveniment>
+
+        <!-- Poesía: descripción corta y aforo limitado -->
+        <esdeveniment id="E8" recinte="R1">
+            <nom>Recital de Poesía y Piano</nom>
+            <dataHora>2026-12-12T20:00</dataHora>
+            <categoria>Poesía</categoria>
+            <descripcio>Versos de autores contemporáneos acompañados por piano en directo.</descripcio>
+            <imatge>recital-poesia.jpg</imatge>
+            <tipusEntrades>
+                <tipusEntrada id="T19" nom="Platea" zona="Z1" preu="15.00" quota="45" />
+                <tipusEntrada id="T20" nom="Dempeus" zona="Z2" preu="10.00" quota="8" />
+            </tipusEntrades>
+        </esdeveniment>
+
+        <!-- Comedia: cinco tipos de entrada para probar el scroll de la lista -->
+        <esdeveniment id="E9" recinte="R1">
+            <nom>Improvisación Total: Comedia sin Guion</nom>
+            <dataHora>2026-12-19T22:00</dataHora>
+            <categoria>Comedia</categoria>
+            <descripcio>El público propone situaciones y los actores improvisan sin red. Ninguna función es igual.</descripcio>
+            <imatge>improvisacion.jpg</imatge>
+            <tipusEntrades>
+                <tipusEntrada id="T21" nom="Platea" zona="Z1" preu="20.00" quota="50" />
+                <tipusEntrada id="T22" nom="Platea reducida" zona="Z1" preu="16.00" quota="12" />
+                <tipusEntrada id="T23" nom="Dempeus" zona="Z2" preu="13.00" quota="40" />
+                <tipusEntrada id="T24" nom="Butaca preferente" zona="Z1" preu="26.00" quota="20" />
+                <tipusEntrada id="T25" nom="Abono dos funciones" zona="Z1" preu="34.00" quota="10" />
+            </tipusEntrades>
+        </esdeveniment>
+
+        <!-- Acústico: precios más altos en platea -->
+        <esdeveniment id="E10" recinte="R1">
+            <nom>Concierto Acústico: Voces y Cuerdas</nom>
+            <dataHora>2026-12-27T20:30</dataHora>
+            <categoria>Música</categoria>
+            <descripcio>Guitarra, violonchelo y tres voces revisan clásicos del pop en formato acústico.</descripcio>
+            <imatge>acustico-cuerdas.jpg</imatge>
+            <tipusEntrades>
+                <tipusEntrada id="T26" nom="Platea" zona="Z1" preu="24.00" quota="50" />
+                <tipusEntrada id="T27" nom="Zona preferente" zona="Z1" preu="32.00" quota="20" />
+                <tipusEntrada id="T28" nom="Dempeus" zona="Z2" preu="18.00" quota="40" />
+            </tipusEntrades>
+        </esdeveniment>
+
+        <!-- Fin de año: precios especiales y mesa VIP -->
+        <esdeveniment id="E11" recinte="R1">
+            <nom>Gala de Fin de Año: Humor y Música</nom>
+            <dataHora>2026-12-31T22:30</dataHora>
+            <categoria>Monólogo</categoria>
+            <descripcio>Despedimos el año con monólogos, música en directo y una copa de cava incluida.</descripcio>
+            <imatge>gala-fin-ano.jpg</imatge>
+            <tipusEntrades>
+                <tipusEntrada id="T29" nom="Platea" zona="Z1" preu="35.00" quota="40" />
+                <tipusEntrada id="T30" nom="Mesa VIP para dos" zona="Z1" preu="90.00" quota="10" />
+                <tipusEntrada id="T31" nom="Dempeus" zona="Z2" preu="25.00" quota="35" />
+                <tipusEntrada id="T32" nom="Entrada anticipada" zona="Z1" preu="30.00" quota="5" />
+            </tipusEntrades>
+        </esdeveniment>
     </esdeveniments>
 </cataleg>
