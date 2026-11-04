@@ -22,8 +22,7 @@
                 <tipusEntrada id="T3" nom="Dempeus" zona="Z2" preu="12.00" quota="40" />
             </tipusEntrades>
         </esdeveniment>
-
-        <!-- Monólogos: título largo, tres tipos de entrada -->
+        
         <esdeveniment id="E2" recinte="R1">
             <nom>Monólogos de Sobremesa: Historias que Nunca Contarías en una Cena Familiar</nom>
             <dataHora>2026-11-13T21:00</dataHora>
@@ -37,7 +36,6 @@
             </tipusEntrades>
         </esdeveniment>
 
-        <!-- Música: solo dos tipos de entrada -->
         <esdeveniment id="E3" recinte="R1">
             <nom>Noche de Jazz y Vinilo</nom>
             <dataHora>2026-11-20T20:30</dataHora>
@@ -50,7 +48,6 @@
             </tipusEntrades>
         </esdeveniment>
 
-        <!-- Teatro: descripción larga y cuatro tipos de entrada -->
         <esdeveniment id="E4" recinte="R1">
             <nom>Microteatro: Cinco Historias Cortas</nom>
             <dataHora>2026-11-28T19:30</dataHora>
@@ -65,7 +62,6 @@
             </tipusEntrades>
         </esdeveniment>
 
-        <!-- Danza: dos tipos de entrada -->
         <esdeveniment id="E5" recinte="R1">
             <nom>Danza Contemporánea: Cuerpos en Movimiento</nom>
             <dataHora>2026-12-05T21:00</dataHora>
@@ -78,7 +74,6 @@
             </tipusEntrades>
         </esdeveniment>
 
-        <!-- Magia: un único tipo de entrada -->
         <esdeveniment id="E6" recinte="R1">
             <nom>Magia de Cerca: Sesión Íntima</nom>
             <dataHora>2026-12-09T19:00</dataHora>
@@ -90,7 +85,6 @@
             </tipusEntrades>
         </esdeveniment>
 
-        <!-- Infantil: tarifas por edad y pack familiar -->
         <esdeveniment id="E7" recinte="R1">
             <nom>Cuentacuentos: El Bosque Encantado</nom>
             <dataHora>2026-11-22T12:00</dataHora>
@@ -104,7 +98,6 @@
             </tipusEntrades>
         </esdeveniment>
 
-        <!-- Poesía: descripción corta y aforo limitado -->
         <esdeveniment id="E8" recinte="R1">
             <nom>Recital de Poesía y Piano</nom>
             <dataHora>2026-12-12T20:00</dataHora>
@@ -117,7 +110,6 @@
             </tipusEntrades>
         </esdeveniment>
 
-        <!-- Comedia: cinco tipos de entrada para probar el scroll de la lista -->
         <esdeveniment id="E9" recinte="R1">
             <nom>Improvisación Total: Comedia sin Guion</nom>
             <dataHora>2026-12-19T22:00</dataHora>
@@ -133,7 +125,6 @@
             </tipusEntrades>
         </esdeveniment>
 
-        <!-- Acústico: precios más altos en platea -->
         <esdeveniment id="E10" recinte="R1">
             <nom>Concierto Acústico: Voces y Cuerdas</nom>
             <dataHora>2026-12-27T20:30</dataHora>
@@ -147,7 +138,6 @@
             </tipusEntrades>
         </esdeveniment>
 
-        <!-- Fin de año: precios especiales y mesa VIP -->
         <esdeveniment id="E11" recinte="R1">
             <nom>Gala de Fin de Año: Humor y Música</nom>
             <dataHora>2026-12-31T22:30</dataHora>
