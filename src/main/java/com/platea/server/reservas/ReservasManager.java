@@ -1,36 +1,34 @@
 package com.platea.server.reservas;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 
+import com.platea.server.database.CatalogoDBReader;
+import com.platea.server.database.DatabaseConnection;
 import com.platea.server.model.Evento;
 import com.platea.server.model.Recinto;
 import com.platea.server.model.TipoEntrada;
 import com.platea.server.model.Zona;
-import com.platea.server.xml.CatalogoXmlReader;
 
 public class ReservasManager {
 
-    // Catálogo de eventos cargado desde el XML
-    private CatalogoXmlReader catalogoXmlReader;
-
-    // Gson para guardar los archivos JSON
-    private Gson gson = new GsonBuilder().setPrettyPrinting().create();
+    // Catálogo de eventos cargado desde SQLite
+    private CatalogoDBReader catalogoDBReader;
 
     // Constructor
-    public ReservasManager(CatalogoXmlReader catalogoXmlReader) {
-        this.catalogoXmlReader = catalogoXmlReader;
+    public ReservasManager(CatalogoDBReader catalogoDBReader) {
+        this.catalogoDBReader = catalogoDBReader;
     }
 
     // Método para devolver un error de compra
@@ -56,97 +54,184 @@ public class ReservasManager {
         return null;
     }
 
-    // Comprobamos si el tipo de entrada pertenece a una zona general
-    private boolean esGeneral(Evento evento, TipoEntrada tipoEntrada) {
+    // Método para buscar la zona de un tipo de entrada
+    private Zona buscarZona(Evento evento, TipoEntrada tipoEntrada) {
 
-        Recinto recinto = catalogoXmlReader.getRecintos().get(evento.getRecinte());
+        Recinto recinto = catalogoDBReader.getRecintos().get(evento.getRecinte());
 
         if (recinto == null) {
-            return false;
+            return null;
         }
 
         for (Zona zona : recinto.getZones()) {
 
             if (zona.getId().equals(tipoEntrada.getZona())) {
-                return zona.getTipus().equalsIgnoreCase("general");
+                return zona;
             }
         }
 
-        return false;
+        return null;
     }
 
-    // Método para leer las reservas de un evento
-    private JsonObject leerReservas(String eventoId) throws IOException {
+    // Comprobamos si el tipo de entrada pertenece a una zona general
+    private boolean esGeneral(Evento evento, TipoEntrada tipoEntrada) {
 
-        File carpeta = new File("reservas");
-        File archivo = new File(carpeta, eventoId + ".json");
+        Zona zona = buscarZona(evento, tipoEntrada);
 
-        // Si todavía no existen reservas, devolvemos un JSON vacío
-        if (!archivo.exists()) {
-
-            JsonObject datos = new JsonObject();
-            datos.addProperty("eventoId", eventoId);
-            datos.add("reservas", new JsonArray());
-
-            return datos;
+        if (zona == null) {
+            return false;
         }
 
-        // Leemos el archivo JSON
-        try (FileReader lector = new FileReader(archivo)) {
-
-            JsonObject datos = JsonParser.parseReader(lector).getAsJsonObject();
-
-            if (!datos.has("reservas") || !datos.get("reservas").isJsonArray()) {
-                throw new IOException("El archivo de reservas no es válido.");
-            }
-
-            return datos;
-        }
+        return zona.getTipus().equalsIgnoreCase("general");
     }
 
-    // Contamos las entradas reservadas de un tipo
-    private int contarReservadas(String eventoId, String tipoEntradaId) throws IOException {
+    // Contamos las entradas reservadas o vendidas de un tipo
+    private int contarReservadas(Connection conn, String eventoId,
+            String tipoEntradaId) throws SQLException {
 
-        JsonObject datos = leerReservas(eventoId);
-        JsonArray reservas = datos.getAsJsonArray("reservas");
+        String sql = "SELECT COUNT(*) FROM ENTRADAS "
+                + "WHERE evento_id = ? AND tipo_entrada_id = ? "
+                + "AND estado IN ('reservada', 'vendida')";
 
-        int total = 0;
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
-        for (JsonElement elemento : reservas) {
+            ps.setString(1, eventoId);
+            ps.setString(2, tipoEntradaId);
 
-            JsonObject reserva = elemento.getAsJsonObject();
+            try (ResultSet rs = ps.executeQuery()) {
 
-            if (reserva.get("tipoEntradaId").getAsString().equals(tipoEntradaId)) {
-                total++;
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
             }
         }
 
-        return total;
+        return 0;
+    }
+
+    // Contamos las entradas reservadas o vendidas de una zona en un evento
+    private int contarReservadasZona(Connection conn, String eventoId,
+            String zonaId) throws SQLException {
+
+        String sql = "SELECT COUNT(*) FROM ENTRADAS e "
+                + "JOIN TIPOS_ENTRADA t ON e.tipo_entrada_id = t.id "
+                + "WHERE e.evento_id = ? AND t.evento_id = ? "
+                + "AND t.zona_id = ? "
+                + "AND e.estado IN ('reservada', 'vendida')";
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, eventoId);
+            ps.setString(2, eventoId);
+            ps.setString(3, zonaId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        }
+
+        return 0;
     }
 
     // Calculamos las entradas que quedan disponibles
-    public int getDisponibles(String eventoId, TipoEntrada tipoEntrada) throws IOException {
+    private int getDisponibles(Connection conn, String eventoId,
+            TipoEntrada tipoEntrada) throws SQLException {
 
-        int reservadas = contarReservadas(eventoId, tipoEntrada.getId());
+        Evento evento = catalogoDBReader.getEventos().get(eventoId);
 
-        return tipoEntrada.getQuota() - reservadas;
-    }
-
-    // Método para guardar las reservas de un evento
-    private void guardarReservas(String eventoId, JsonObject datos) throws IOException {
-
-        File carpeta = new File("reservas");
-
-        // Creamos la carpeta si todavía no existe
-        if (!carpeta.exists()) {
-            carpeta.mkdirs();
+        if (evento == null) {
+            throw new SQLException("No existe el evento " + eventoId);
         }
 
-        File archivo = new File(carpeta, eventoId + ".json");
+        Zona zona = buscarZona(evento, tipoEntrada);
 
-        // Guardamos los datos en el archivo JSON
-        try (FileWriter escritor = new FileWriter(archivo)) {
-            gson.toJson(datos, escritor);
+        if (zona == null) {
+            throw new SQLException("No existe la zona del tipo de entrada.");
+        }
+
+        // Comprobamos las entradas disponibles del tipo
+        int reservadasTipo = contarReservadas(conn, eventoId, tipoEntrada.getId());
+        int disponiblesTipo = tipoEntrada.getQuota() - reservadasTipo;
+
+        // Comprobamos las entradas disponibles de toda la zona
+        int reservadasZona = contarReservadasZona(conn, eventoId, zona.getId());
+        int disponiblesZona = zona.getAforament() - reservadasZona;
+
+        // Devolvemos el límite más restrictivo
+        return Math.max(0, Math.min(disponiblesTipo, disponiblesZona));
+    }
+
+    // Método público para consultar la disponibilidad desde SQLite
+    public int getDisponibles(String eventoId, TipoEntrada tipoEntrada) throws SQLException {
+
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            return getDisponibles(conn, eventoId, tipoEntrada);
+        }
+    }
+
+    // Método para guardar una compra en la BD
+    private long guardarCompra(Connection conn, String nombre,
+            String correo) throws SQLException {
+
+        String sql = "INSERT INTO COMPRAS "
+                + "(comprador_nombre, comprador_correo, fecha) "
+                + "VALUES (?, ?, ?)";
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, nombre);
+            ps.setString(2, correo);
+            ps.setString(3, LocalDateTime.now().toString());
+
+            ps.executeUpdate();
+        }
+
+        // Obtenemos el ID de la compra que acabamos de insertar
+        String sqlId = "SELECT last_insert_rowid()";
+
+        try (PreparedStatement ps = conn.prepareStatement(sqlId);
+                ResultSet rs = ps.executeQuery()) {
+
+            if (rs.next()) {
+                return rs.getLong(1);
+            }
+        }
+
+        throw new SQLException("No se ha podido obtener el ID de la compra.");
+    }
+
+    // Método para guardar una entrada en la BD
+    private void guardarEntrada(Connection conn, long compraId,
+            String eventoId, TipoEntrada tipoEntrada,
+            String localizador, String titular) throws SQLException {
+
+        String sql = "INSERT INTO ENTRADAS "
+                + "(compra_id, evento_id, tipo_entrada_id, asiento_id, "
+                + "localizador, titular, precio, estado) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setLong(1, compraId);
+            ps.setString(2, eventoId);
+            ps.setString(3, tipoEntrada.getId());
+
+            // Las entradas generales no tienen asiento asignado
+            ps.setNull(4, java.sql.Types.INTEGER);
+
+            ps.setString(5, localizador);
+            ps.setString(6, titular);
+
+            // Guardamos el precio pagado en el momento de la compra
+            ps.setDouble(7, tipoEntrada.getPreu().doubleValue());
+
+            // La entrada queda vendida al completar la compra
+            ps.setString(8, "vendida");
+
+            ps.executeUpdate();
         }
     }
 
@@ -157,7 +242,8 @@ public class ReservasManager {
 
             // ********** COMPROBAR DATOS DEL COMPRADOR **********
 
-            if (!request.has("nombre") || !request.has("correo")
+            if (request == null
+                    || !request.has("nombre") || !request.has("correo")
                     || !request.get("nombre").isJsonPrimitive()
                     || !request.get("correo").isJsonPrimitive()
                     || !request.get("nombre").getAsJsonPrimitive().isString()
@@ -184,8 +270,16 @@ public class ReservasManager {
                 return crearError("La cesta está vacía.");
             }
 
-            // Guardamos los eventos que aparecen en la compra
-            ArrayList<String> eventosCompra = new ArrayList<>();
+            // Guardamos los tipos y zonas solicitados en la compra
+            Map<String, Integer> solicitadoPorTipo = new HashMap<>();
+            Map<String, Integer> solicitadoPorZona = new HashMap<>();
+            Map<String, TipoEntrada> tiposCompra = new HashMap<>();
+            Map<String, Zona> zonasCompra = new HashMap<>();
+            Map<String, String> eventosPorTipo = new HashMap<>();
+            Map<String, String> eventosPorZona = new HashMap<>();
+
+            // Guardamos las entradas de la cesta una vez validadas
+            ArrayList<JsonObject> entradasCompra = new ArrayList<>();
 
             // ********** VALIDAR TODA LA COMPRA **********
 
@@ -216,8 +310,11 @@ public class ReservasManager {
                 int cantidad;
 
                 try {
-                    cantidad = entrada.get("cantidad").getAsInt();
-                } catch (Exception e) {
+                    // Solo admitimos cantidades enteras y positivas
+                    cantidad = Integer.parseInt(
+                            entrada.get("cantidad").getAsString());
+
+                } catch (NumberFormatException e) {
                     return crearError("La cantidad no es válida.");
                 }
 
@@ -225,8 +322,8 @@ public class ReservasManager {
                     return crearError("La cantidad debe ser mayor que cero.");
                 }
 
-                // Buscamos el evento en el catálogo XML
-                Evento evento = catalogoXmlReader.getEventos().get(eventoId);
+                // Buscamos el evento en el catálogo SQLite
+                Evento evento = catalogoDBReader.getEventos().get(eventoId);
 
                 if (evento == null) {
                     return crearError("No existe el evento " + eventoId);
@@ -244,122 +341,144 @@ public class ReservasManager {
                     return crearError("Solo se pueden comprar entradas generales.");
                 }
 
-                // Comprobamos la disponibilidad actual
-                int disponibles = getDisponibles(eventoId, tipoEntrada);
+                // Buscamos la zona para comprobar también su aforo
+                Zona zona = buscarZona(evento, tipoEntrada);
+
+                if (zona == null) {
+                    return crearError("No existe la zona del tipo de entrada.");
+                }
 
                 // Sumamos las cantidades si el mismo tipo aparece varias veces
-                int totalSolicitado = 0;
+                int totalTipo = Math.addExact(
+                        solicitadoPorTipo.getOrDefault(tipoEntradaId, 0),
+                        cantidad);
 
-                for (JsonElement otroElemento : entradas) {
+                solicitadoPorTipo.put(tipoEntradaId, totalTipo);
+                tiposCompra.put(tipoEntradaId, tipoEntrada);
+                eventosPorTipo.put(tipoEntradaId, eventoId);
 
-                    if (!otroElemento.isJsonObject()) {
-                        continue;
-                    }
+                // Sumamos las cantidades de todos los tipos de una misma zona
+                String claveZona = eventoId + "|" + zona.getId();
 
-                    JsonObject otraEntrada = otroElemento.getAsJsonObject();
+                int totalZona = Math.addExact(
+                        solicitadoPorZona.getOrDefault(claveZona, 0),
+                        cantidad);
 
-                    if (otraEntrada.has("eventoId") && otraEntrada.has("tipoEntradaId")
-                            && otraEntrada.get("eventoId").isJsonPrimitive()
-                            && otraEntrada.get("tipoEntradaId").isJsonPrimitive()
-                            && otraEntrada.get("eventoId").getAsString().equals(eventoId)
-                            && otraEntrada.get("tipoEntradaId").getAsString().equals(tipoEntradaId)) {
+                solicitadoPorZona.put(claveZona, totalZona);
+                zonasCompra.put(claveZona, zona);
+                eventosPorZona.put(claveZona, eventoId);
 
-                        if (otraEntrada.has("cantidad")
-                                && otraEntrada.get("cantidad").isJsonPrimitive()
-                                && otraEntrada.get("cantidad").getAsJsonPrimitive().isNumber()) {
+                entradasCompra.add(entrada);
+            }
 
-                            try {
-                                totalSolicitado += otraEntrada.get("cantidad").getAsInt();
-                            } catch (Exception e) {
-                                return crearError("La cantidad no es válida.");
-                            }
+            // ********** COMPROBAR DISPONIBILIDAD Y GUARDAR COMPRA **********
+
+            // Abrimos una única conexión para toda la compra
+            try (Connection conn = DatabaseConnection.getConnection()) {
+
+                // Agrupamos las comprobaciones y las inserciones
+                // Si ocurre un error, se deshacen todos los cambios
+                conn.setAutoCommit(false);
+
+                try {
+
+                    // Comprobamos la cuota de cada tipo de entrada
+                    for (String tipoEntradaId : solicitadoPorTipo.keySet()) {
+
+                        String eventoId = eventosPorTipo.get(tipoEntradaId);
+                        TipoEntrada tipoEntrada = tiposCompra.get(tipoEntradaId);
+
+                        int reservadas = contarReservadas(
+                                conn, eventoId, tipoEntradaId);
+
+                        int disponibles = tipoEntrada.getQuota() - reservadas;
+
+                        if (solicitadoPorTipo.get(tipoEntradaId) > disponibles) {
+
+                            conn.rollback();
+                            return crearError("No hay suficientes entradas disponibles.");
                         }
                     }
-                }
 
-                if (totalSolicitado > disponibles) {
-                    return crearError("No hay suficientes entradas disponibles.");
-                }
+                    // Comprobamos el aforo compartido de cada zona
+                    for (String claveZona : solicitadoPorZona.keySet()) {
 
-                // Guardamos el ID del evento para escribir su archivo después
-                if (!eventosCompra.contains(eventoId)) {
-                    eventosCompra.add(eventoId);
-                }
-            }
+                        String eventoId = eventosPorZona.get(claveZona);
+                        Zona zona = zonasCompra.get(claveZona);
 
-            // ********** GENERAR LAS RESERVAS **********
+                        int reservadas = contarReservadasZona(
+                                conn, eventoId, zona.getId());
 
-            JsonArray localizadores = new JsonArray();
+                        int disponibles = zona.getAforament() - reservadas;
 
-            // Preparamos las reservas de cada evento
-            ArrayList<JsonObject> datosEventos = new ArrayList<>();
+                        if (solicitadoPorZona.get(claveZona) > disponibles) {
 
-            for (String eventoId : eventosCompra) {
-                datosEventos.add(leerReservas(eventoId));
-            }
-
-            // Recorremos todas las entradas de la cesta
-            for (JsonElement elemento : entradas) {
-
-                JsonObject entrada = elemento.getAsJsonObject();
-
-                String eventoId = entrada.get("eventoId").getAsString();
-                String tipoEntradaId = entrada.get("tipoEntradaId").getAsString();
-                int cantidad = entrada.get("cantidad").getAsInt();
-
-                // Buscamos los datos del evento correspondiente
-                JsonObject datos = null;
-
-                for (JsonObject datosEvento : datosEventos) {
-
-                    if (datosEvento.get("eventoId").getAsString().equals(eventoId)) {
-                        datos = datosEvento;
-                        break;
+                            conn.rollback();
+                            return crearError("No hay suficientes entradas disponibles.");
+                        }
                     }
-                }
 
-                JsonArray reservas = datos.getAsJsonArray("reservas");
+                    // ********** GENERAR LAS RESERVAS **********
 
-                // Generamos un localizador por cada entrada comprada
-                for (int i = 0; i < cantidad; i++) {
+                    JsonArray localizadores = new JsonArray();
 
-                    String localizador = "ALT-" + UUID.randomUUID().toString();
+                    // Guardamos primero la compra y obtenemos su ID
+                    long compraId = guardarCompra(conn, nombre, correo);
 
-                    // Reserva que guardaremos en el servidor
-                    JsonObject reserva = new JsonObject();
-                    reserva.addProperty("tipoEntradaId", tipoEntradaId);
-                    reserva.addProperty("localizador", localizador);
-                    reserva.addProperty("nombre", nombre);
-                    reserva.addProperty("correo", correo);
+                    // Recorremos todas las entradas de la cesta
+                    for (JsonObject entrada : entradasCompra) {
 
-                    reservas.add(reserva);
+                        String eventoId = entrada.get("eventoId").getAsString();
+                        String tipoEntradaId = entrada.get("tipoEntradaId").getAsString();
+                        int cantidad = Integer.parseInt(
+                                entrada.get("cantidad").getAsString());
 
-                    // Localizador que devolveremos a la APP
-                    JsonObject localizadorRespuesta = new JsonObject();
-                    localizadorRespuesta.addProperty("eventoId", eventoId);
-                    localizadorRespuesta.addProperty("tipoEntradaId", tipoEntradaId);
-                    localizadorRespuesta.addProperty("localizador", localizador);
+                        TipoEntrada tipoEntrada = tiposCompra.get(tipoEntradaId);
 
-                    localizadores.add(localizadorRespuesta);
+                        // Generamos un localizador por cada entrada comprada
+                        for (int i = 0; i < cantidad; i++) {
+
+                            String localizador = "ALT-" + UUID.randomUUID().toString();
+
+                            // Reserva que guardaremos en SQLite
+                            guardarEntrada(
+                                    conn,
+                                    compraId,
+                                    eventoId,
+                                    tipoEntrada,
+                                    localizador,
+                                    nombre);
+
+                            // Localizador que devolveremos a la APP
+                            JsonObject localizadorRespuesta = new JsonObject();
+                            localizadorRespuesta.addProperty("eventoId", eventoId);
+                            localizadorRespuesta.addProperty("tipoEntradaId", tipoEntradaId);
+                            localizadorRespuesta.addProperty("localizador", localizador);
+
+                            localizadores.add(localizadorRespuesta);
+                        }
+                    }
+
+                    // ********** GUARDAR LA COMPRA EN SQLITE **********
+
+                    // Confirmamos todas las inserciones juntas
+                    conn.commit();
+
+                    // ********** RESPUESTA CORRECTA **********
+
+                    JsonObject respuesta = new JsonObject();
+                    respuesta.addProperty("type", "compraOK");
+                    respuesta.add("localizadores", localizadores);
+
+                    return respuesta.toString();
+
+                } catch (Exception e) {
+
+                    // Si ocurre algún error, deshacemos toda la compra
+                    conn.rollback();
+                    throw e;
                 }
             }
-
-            // ********** GUARDAR LOS ARCHIVOS JSON **********
-
-            for (JsonObject datos : datosEventos) {
-
-                String eventoId = datos.get("eventoId").getAsString();
-
-                guardarReservas(eventoId, datos);
-            }
-
-            // ********** RESPUESTA CORRECTA **********
-
-            JsonObject respuesta = new JsonObject();
-            respuesta.addProperty("type", "compraOK");
-            respuesta.add("localizadores", localizadores);
-
-            return respuesta.toString();
 
         } catch (Exception e) {
 

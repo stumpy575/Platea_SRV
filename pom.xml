@@ -53,6 +53,13 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- Base de datos SQLite -->
+        <dependency>
+            <groupId>org.xerial</groupId>
+            <artifactId>sqlite-jdbc</artifactId>
+            <version>3.53.4.0</version>
+        </dependency>
+
     </dependencies>
 
     <!-- Configuración de compilación -->

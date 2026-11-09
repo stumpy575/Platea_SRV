@@ -3,7 +3,8 @@
     <!-- Recintes amb les seves zones -->
     <recintes>
         <recinte id="R1" nom="Sala Petita">
-            <zona id="Z1" nom="Platea" tipus="numerada" aforament="60" />
+            <zona id="Z1" nom="Platea" tipus="numerada" aforament="60" filas="6"
+                asientosPorFila="10" />
             <zona id="Z2" nom="Dempeus" tipus="general" aforament="40" />
         </recinte>
     </recintes>
@@ -22,12 +23,13 @@
                 <tipusEntrada id="T3" nom="Dempeus" zona="Z2" preu="12.00" quota="40" />
             </tipusEntrades>
         </esdeveniment>
-        
+
         <esdeveniment id="E2" recinte="R1">
             <nom>Monólogos de Sobremesa: Historias que Nunca Contarías en una Cena Familiar</nom>
             <dataHora>2026-11-13T21:00</dataHora>
             <categoria>Monólogo</categoria>
-            <descripcio>Dos cómicos se enfrentan en un duelo de improvisación con el público como jurado.</descripcio>
+            <descripcio>Dos cómicos se enfrentan en un duelo de improvisación con el público como
+                jurado.</descripcio>
             <imatge>duelo-monologos.jpg</imatge>
             <tipusEntrades>
                 <tipusEntrada id="T4" nom="Dempeus" zona="Z2" preu="12.00" quota="40" />
@@ -40,7 +42,8 @@
             <nom>Noche de Jazz y Vinilo</nom>
             <dataHora>2026-11-20T20:30</dataHora>
             <categoria>Música</categoria>
-            <descripcio>Un cuarteto de jazz interpreta clásicos de los años cincuenta en un ambiente cercano.</descripcio>
+            <descripcio>Un cuarteto de jazz interpreta clásicos de los años cincuenta en un ambiente
+                cercano.</descripcio>
             <imatge>jazz-vinilo.jpg</imatge>
             <tipusEntrades>
                 <tipusEntrada id="T7" nom="Platea" zona="Z1" preu="22.00" quota="45" />
@@ -52,7 +55,9 @@
             <nom>Microteatro: Cinco Historias Cortas</nom>
             <dataHora>2026-11-28T19:30</dataHora>
             <categoria>Teatro</categoria>
-            <descripcio>Cinco piezas breves de diez minutos cada una recorren el humor, el drama y la sorpresa. El público cambia de sala entre historia e historia y descubre un final distinto en cada pase.</descripcio>
+            <descripcio>Cinco piezas breves de diez minutos cada una recorren el humor, el drama y
+                la sorpresa. El público cambia de sala entre historia e historia y descubre un final
+                distinto en cada pase.</descripcio>
             <imatge>microteatro.jpg</imatge>
             <tipusEntrades>
                 <tipusEntrada id="T9" nom="Platea" zona="Z1" preu="18.00" quota="50" />
@@ -78,7 +83,8 @@
             <nom>Magia de Cerca: Sesión Íntima</nom>
             <dataHora>2026-12-09T19:00</dataHora>
             <categoria>Magia</categoria>
-            <descripcio>Un mago actúa a menos de tres metros del público en una sesión para treinta personas.</descripcio>
+            <descripcio>Un mago actúa a menos de tres metros del público en una sesión para treinta
+                personas.</descripcio>
             <imatge>magia-cerca.jpg</imatge>
             <tipusEntrades>
                 <tipusEntrada id="T15" nom="Platea" zona="Z1" preu="25.00" quota="30" />
@@ -94,7 +100,8 @@
             <tipusEntrades>
                 <tipusEntrada id="T16" nom="Entrada infantil" zona="Z1" preu="8.00" quota="40" />
                 <tipusEntrada id="T17" nom="Entrada adulto" zona="Z1" preu="12.00" quota="40" />
-                <tipusEntrada id="T18" nom="Pack familiar (4 personas)" zona="Z1" preu="30.00" quota="15" />
+                <tipusEntrada id="T18" nom="Pack familiar (4 personas)" zona="Z1" preu="30.00"
+                    quota="15" />
             </tipusEntrades>
         </esdeveniment>
 
@@ -114,7 +121,8 @@
             <nom>Improvisación Total: Comedia sin Guion</nom>
             <dataHora>2026-12-19T22:00</dataHora>
             <categoria>Comedia</categoria>
-            <descripcio>El público propone situaciones y los actores improvisan sin red. Ninguna función es igual.</descripcio>
+            <descripcio>El público propone situaciones y los actores improvisan sin red. Ninguna
+                función es igual.</descripcio>
             <imatge>improvisacion.jpg</imatge>
             <tipusEntrades>
                 <tipusEntrada id="T21" nom="Platea" zona="Z1" preu="20.00" quota="50" />
@@ -129,7 +137,8 @@
             <nom>Concierto Acústico: Voces y Cuerdas</nom>
             <dataHora>2026-12-27T20:30</dataHora>
             <categoria>Música</categoria>
-            <descripcio>Guitarra, violonchelo y tres voces revisan clásicos del pop en formato acústico.</descripcio>
+            <descripcio>Guitarra, violonchelo y tres voces revisan clásicos del pop en formato
+                acústico.</descripcio>
             <imatge>acustico-cuerdas.jpg</imatge>
             <tipusEntrades>
                 <tipusEntrada id="T26" nom="Platea" zona="Z1" preu="24.00" quota="50" />
@@ -142,7 +151,8 @@
             <nom>Gala de Fin de Año: Humor y Música</nom>
             <dataHora>2026-12-31T22:30</dataHora>
             <categoria>Monólogo</categoria>
-            <descripcio>Despedimos el año con monólogos, música en directo y una copa de cava incluida.</descripcio>
+            <descripcio>Despedimos el año con monólogos, música en directo y una copa de cava
+                incluida.</descripcio>
             <imatge>gala-fin-ano.jpg</imatge>
             <tipusEntrades>
                 <tipusEntrada id="T29" nom="Platea" zona="Z1" preu="35.00" quota="40" />

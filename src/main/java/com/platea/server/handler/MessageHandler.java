@@ -4,10 +4,10 @@ import com.google.gson.JsonParser;
 import com.platea.server.model.Evento;
 import com.platea.server.model.TipoEntrada;
 import com.platea.server.reservas.ReservasManager;
-import com.platea.server.xml.CatalogoXmlReader;
+import com.platea.server.database.CatalogoDBReader;
 import java.util.Collection;
 import java.util.List;
-import java.io.IOException;
+import java.sql.SQLException;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -15,7 +15,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 
 public class MessageHandler {
-    public static String handleMessage(String message, CatalogoXmlReader catalogoXmlReader,
+    public static String handleMessage(String message, CatalogoDBReader catalogoDBReader,
             ReservasManager reservasManager) {
         try {
             // Creamos un elemento JSON
@@ -58,7 +58,7 @@ public class MessageHandler {
 
             // Si type es getEventos:
             else if (type.equals("getEventos")) {
-                Collection<Evento> values = catalogoXmlReader.getEventos().values();
+                Collection<Evento> values = catalogoDBReader.getEventos().values();
                 JsonObject response = new JsonObject();
                 response.addProperty("type", "eventos");
                 JsonArray eventosArray = new JsonArray();
@@ -95,7 +95,7 @@ public class MessageHandler {
                     return createErrorResponse("El eventoId es una cadena vacía.");
                 }
 
-                Evento evento = catalogoXmlReader.getEventos().get(eventoId);
+                Evento evento = catalogoDBReader.getEventos().get(eventoId);
 
                 if (evento == null) {
                     return createErrorResponse("No se ha encontrado ningún evento.");
@@ -118,7 +118,7 @@ public class MessageHandler {
 
                     try {
                         disponibles = reservasManager.getDisponibles(eventoId, e);
-                    } catch (IOException ex) {
+                    } catch (SQLException ex) {
                         return createErrorResponse("No se ha podido consultar la disponibilidad.");
                     }
 
@@ -135,7 +135,8 @@ public class MessageHandler {
             else if (type.equals("comprarEntradas")) {
 
                 // Enviamos los datos al gestor de reservas
-                // Este comprueba la compra, genera los localizadores y guarda el JSON
+                // Este comprueba la compra, genera los localizadores y guarda los datos en
+                // SQLite
                 return reservasManager.comprarEntradas(request);
             }
 

@@ -65,8 +65,18 @@ public class CatalogoXmlReader {
                     String nomZona = elmZona.getAttribute("nom");
                     String tipusZona = elmZona.getAttribute("tipus");
                     int aforamentZona = Integer.parseInt(elmZona.getAttribute("aforament"));
+
+                    // Cogemos las filas y asientos por fila si la zona es numerada
+                    int filas = 0;
+                    int asientosPorFila = 0;
+
+                    if (tipusZona.equalsIgnoreCase("numerada")) {
+                        filas = Integer.parseInt(elmZona.getAttribute("filas"));
+                        asientosPorFila = Integer.parseInt(elmZona.getAttribute("asientosPorFila"));
+                    }
+
                     // Creamos un objeto de tipo Zona y lo añadimos con el métod addZona al recinto
-                    Zona zona = new Zona(idZona, nomZona, tipusZona, aforamentZona);
+                    Zona zona = new Zona(idZona, nomZona, tipusZona, aforamentZona, filas, asientosPorFila);
                     recinto.addZona(zona);
                 }
 

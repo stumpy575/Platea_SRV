@@ -7,23 +7,23 @@ import org.java_websocket.server.WebSocketServer;
 
 import com.platea.server.handler.MessageHandler;
 import com.platea.server.reservas.ReservasManager;
-import com.platea.server.xml.CatalogoXmlReader;
+import com.platea.server.database.CatalogoDBReader;
 
 public class AlteaServer extends WebSocketServer {
     private int port;
-    private CatalogoXmlReader catalogoXmlReader;
+    private CatalogoDBReader catalogoDBReader;
 
     // Gestor de reservas de entradas
     private ReservasManager reservasManager;
 
-    public AlteaServer(int port, CatalogoXmlReader catalogoXmlReader) {
+    public AlteaServer(int port, CatalogoDBReader catalogoDBReader) {
 
         super(new InetSocketAddress(port));
         this.port = port;
-        this.catalogoXmlReader = catalogoXmlReader;
+        this.catalogoDBReader = catalogoDBReader;
 
-        // Creamos el gestor de reservas utilizando el catálogo XML
-        this.reservasManager = new ReservasManager(catalogoXmlReader);
+        // Creamos el gestor de reservas utilizando el catálogo SQLite
+        this.reservasManager = new ReservasManager(catalogoDBReader);
 
     }
 
@@ -38,7 +38,7 @@ public class AlteaServer extends WebSocketServer {
 
     @Override
     public void onMessage(WebSocket conn, String message) {
-        String response = MessageHandler.handleMessage(message, catalogoXmlReader, reservasManager);
+        String response = MessageHandler.handleMessage(message, catalogoDBReader, reservasManager);
         conn.send(response);
     }
 
