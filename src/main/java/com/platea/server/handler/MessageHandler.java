@@ -5,6 +5,8 @@ import com.platea.server.model.Evento;
 import com.platea.server.model.TipoEntrada;
 import com.platea.server.reservas.ReservasManager;
 import com.platea.server.database.CatalogoDBReader;
+import com.platea.server.database.MisEntradasDBReader;
+
 import java.util.Collection;
 import java.util.List;
 import java.sql.SQLException;
@@ -15,11 +17,14 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 
 public class MessageHandler {
+
     public static String handleMessage(String message, CatalogoDBReader catalogoDBReader,
             ReservasManager reservasManager) {
+
         try {
             // Creamos un elemento JSON
             JsonElement element = JsonParser.parseString(message);
+
             // Si ese elemento no es un OBJETO JSON devolvemos respuesta de error
             if (!element.isJsonObject()) {
                 return createErrorResponse("El mensaje debe ser un objeto JSON.");
@@ -36,14 +41,17 @@ public class MessageHandler {
             // Si type NO es un valor primitivo o NO es una cadena de texto (String)
             // Esto evita que type contenga valores como objetos o arrays o lo rechaza si no
             // es una cadena de texto
-            if (!request.get("type").isJsonPrimitive() || !request.get("type").getAsJsonPrimitive().isString()) {
-                return createErrorResponse("El valor type no es un tipo primitivo o no es una cadena de texto.");
+            if (!request.get("type").isJsonPrimitive()
+                    || !request.get("type").getAsJsonPrimitive().isString()) {
+                return createErrorResponse(
+                        "El valor type no es un tipo primitivo o no es una cadena de texto.");
             }
 
             // Si el type es valido, lo obtenemos como String
             String type = request.get("type").getAsString();
 
             // ES VÁLIDO.
+
             // Si type es ping:
             if (type.equals("ping")) {
                 JsonObject response = new JsonObject();
@@ -58,12 +66,18 @@ public class MessageHandler {
 
             // Si type es getEventos:
             else if (type.equals("getEventos")) {
+
                 Collection<Evento> values = catalogoDBReader.getEventos().values();
+
                 JsonObject response = new JsonObject();
                 response.addProperty("type", "eventos");
+
                 JsonArray eventosArray = new JsonArray();
+
                 for (Evento e : values) {
+
                     JsonObject evento = new JsonObject();
+
                     evento.addProperty("id", e.getId());
                     evento.addProperty("nom", e.getNom());
                     evento.addProperty("recinte", e.getRecinte());
@@ -71,25 +85,31 @@ public class MessageHandler {
                     evento.addProperty("categoria", e.getCategoria());
                     evento.addProperty("descripcio", e.getDescripcio());
                     evento.addProperty("imatge", e.getImatge());
+
                     eventosArray.add(evento);
                 }
+
                 response.add("eventos", eventosArray);
                 return response.toString();
             }
 
             // Si type es getTiposEntrada:
             else if (type.equals("getTiposEntrada")) {
+
                 // Si NO existe "eventoId" o su valor es null
                 if (!request.has("eventoId") || request.get("eventoId").isJsonNull()) {
                     return createErrorResponse("No existe el evento o su valor es null.");
                 }
+
                 // Comprobamos que es un string (igual que arriba)
                 if (!request.get("eventoId").isJsonPrimitive()
                         || !request.get("eventoId").getAsJsonPrimitive().isString()) {
                     return createErrorResponse(
                             "El valor eventoId no es un tipo primitivo o no es una cadena de texto.");
                 }
+
                 String eventoId = request.get("eventoId").getAsString();
+
                 // Comprobamos que no está vacío ""
                 if (eventoId.isBlank()) {
                     return createErrorResponse("El eventoId es una cadena vacía.");
@@ -100,14 +120,19 @@ public class MessageHandler {
                 if (evento == null) {
                     return createErrorResponse("No se ha encontrado ningún evento.");
                 }
+
                 List<TipoEntrada> listaTipoEntrada = evento.getTipusEntrades();
+
                 JsonObject response = new JsonObject();
                 response.addProperty("type", "tiposEntrada");
                 response.addProperty("eventoId", eventoId);
+
                 JsonArray tiposEntradaArray = new JsonArray();
 
                 for (TipoEntrada e : listaTipoEntrada) {
+
                     JsonObject entrada = new JsonObject();
+
                     entrada.addProperty("id", e.getId());
                     entrada.addProperty("nom", e.getNom());
                     entrada.addProperty("zona", e.getZona());
@@ -118,13 +143,16 @@ public class MessageHandler {
 
                     try {
                         disponibles = reservasManager.getDisponibles(eventoId, e);
+
                     } catch (SQLException ex) {
-                        return createErrorResponse("No se ha podido consultar la disponibilidad.");
+                        return createErrorResponse(
+                                "No se ha podido consultar la disponibilidad.");
                     }
 
                     entrada.addProperty("disponibles", disponibles);
                     tiposEntradaArray.add(entrada);
                 }
+
                 response.add("tiposEntrada", tiposEntradaArray);
                 return response.toString();
             }
@@ -140,14 +168,49 @@ public class MessageHandler {
                 return reservasManager.comprarEntradas(request);
             }
 
-            // Si no es ni type ni bounce
+            // ********** CONSULTAR MIS ENTRADAS **********
+
+            // Si type es getMisEntradas:
+            else if (type.equals("getMisEntradas")) {
+
+                // Comprobamos que exista el correo y que sea una cadena de texto
+                if (!request.has("correo")
+                        || !request.get("correo").isJsonPrimitive()
+                        || !request.get("correo").getAsJsonPrimitive().isString()) {
+                    return createErrorResponse("No se ha recibido un correo válido.");
+                }
+
+                String correo = request.get("correo").getAsString().trim();
+
+                // Comprobamos que el correo no esté vacío
+                if (correo.isBlank()) {
+                    return createErrorResponse("El correo está vacío.");
+                }
+
+                try {
+                    // Consultamos las entradas asociadas al correo en SQLite
+                    JsonArray entradas = MisEntradasDBReader.getMisEntradas(correo);
+
+                    JsonObject response = new JsonObject();
+                    response.addProperty("type", "misEntradas");
+                    response.add("entradas", entradas);
+
+                    return response.toString();
+
+                } catch (SQLException e) {
+                    return createErrorResponse(
+                            "No se han podido consultar las entradas del usuario.");
+                }
+            }
+
+            // Si no es ningún tipo de mensaje conocido
             else {
                 return createErrorResponse("Tipo de mensaje desconocido.");
             }
-        }
 
-        catch (JsonParseException e) {
-            return createErrorResponse("El mensaje recibido no contiene un JSON válido.");
+        } catch (JsonParseException e) {
+            return createErrorResponse(
+                    "El mensaje recibido no contiene un JSON válido.");
         }
     }
 
@@ -155,9 +218,12 @@ public class MessageHandler {
 
     // Método para gestionar los type error de JSONs con mensaje personalizado.
     private static String createErrorResponse(String errorMessage) {
+
         JsonObject jsonError = new JsonObject();
+
         jsonError.addProperty("type", "error");
         jsonError.addProperty("message", errorMessage);
+
         return jsonError.toString();
     }
 }
