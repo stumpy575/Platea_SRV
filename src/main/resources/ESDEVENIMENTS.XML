@@ -6,6 +6,9 @@
             <zona id="Z1" nom="Platea" tipus="numerada" aforament="60" filas="6"
                 asientosPorFila="10" />
             <zona id="Z2" nom="Dempeus" tipus="general" aforament="40" />
+            <zona id="Z3" nom="Pista" tipus="general" aforament="20" />
+            <zona id="Z4" nom="Balcó" tipus="numerada" aforament="24" filas="3"
+                asientosPorFila="8" />
         </recinte>
     </recintes>
 
@@ -18,9 +21,8 @@
             <descripcio>Una hora d'humor sobre les converses incòmodes de cada dia.</descripcio>
             <imatge>monoleg-sopar.jpg</imatge>
             <tipusEntrades>
-                <tipusEntrada id="T1" nom="Platea" zona="Z1" preu="18.00" quota="50" />
-                <tipusEntrada id="T2" nom="Platea reduïda" zona="Z1" preu="14.00" quota="10" />
-                <tipusEntrada id="T3" nom="Dempeus" zona="Z2" preu="12.00" quota="40" />
+                <tipusEntrada id="T1" nom="Platea" zona="Z1" preu="18.00" quota="10" />
+                <tipusEntrada id="T3" nom="Pista" zona="Z3" preu="12.00" quota="10" />
             </tipusEntrades>
         </esdeveniment>
 
@@ -32,9 +34,9 @@
                 jurado.</descripcio>
             <imatge>duelo-monologos.jpg</imatge>
             <tipusEntrades>
-                <tipusEntrada id="T4" nom="Dempeus" zona="Z2" preu="12.00" quota="40" />
-                <tipusEntrada id="T5" nom="Platea" zona="Z1" preu="16.00" quota="60" />
-                <tipusEntrada id="T6" nom="Platea reducida" zona="Z1" preu="13.00" quota="15" />
+                <tipusEntrada id="T4" nom="Dempeus" zona="Z2" preu="12.00" quota="10" />
+                <tipusEntrada id="T5" nom="Platea" zona="Z1" preu="16.00" quota="15" />
+                <tipusEntrada id="T6" nom="Balcó" zona="Z4" preu="13.00" quota="8" />
             </tipusEntrades>
         </esdeveniment>
 
@@ -46,8 +48,8 @@
                 cercano.</descripcio>
             <imatge>jazz-vinilo.jpg</imatge>
             <tipusEntrades>
-                <tipusEntrada id="T7" nom="Platea" zona="Z1" preu="22.00" quota="45" />
-                <tipusEntrada id="T8" nom="Dempeus" zona="Z2" preu="16.00" quota="30" />
+                <tipusEntrada id="T7" nom="Platea" zona="Z1" preu="18.00" quota="10" />
+                <tipusEntrada id="T8" nom="Pista" zona="Z3" preu="12.00" quota="10" />
             </tipusEntrades>
         </esdeveniment>
 
@@ -60,10 +62,9 @@
                 distinto en cada pase.</descripcio>
             <imatge>microteatro.jpg</imatge>
             <tipusEntrades>
-                <tipusEntrada id="T9" nom="Platea" zona="Z1" preu="18.00" quota="50" />
-                <tipusEntrada id="T10" nom="Platea reducida" zona="Z1" preu="14.00" quota="10" />
-                <tipusEntrada id="T11" nom="Dempeus" zona="Z2" preu="12.00" quota="40" />
-                <tipusEntrada id="T12" nom="Abono dos funciones" zona="Z1" preu="28.00" quota="25" />
+                <tipusEntrada id="T9" nom="Platea" zona="Z1" preu="18.00" quota="10" />
+                <tipusEntrada id="T11" nom="Dempeus" zona="Z2" preu="12.00" quota="10" />
+                <tipusEntrada id="T12" nom="Balcó" zona="Z4" preu="20.00" quota="8" />
             </tipusEntrades>
         </esdeveniment>
 
@@ -74,8 +75,8 @@
             <descripcio>Seis bailarines exploran el movimiento y el espacio con música en directo.</descripcio>
             <imatge>danza-contemporanea.jpg</imatge>
             <tipusEntrades>
-                <tipusEntrada id="T13" nom="Platea" zona="Z1" preu="20.00" quota="40" />
-                <tipusEntrada id="T14" nom="Dempeus" zona="Z2" preu="15.00" quota="25" />
+                <tipusEntrada id="T13" nom="Platea" zona="Z1" preu="18.00" quota="10" />
+                <tipusEntrada id="T14" nom="Dempeus" zona="Z2" preu="12.00" quota="10" />
             </tipusEntrades>
         </esdeveniment>
 
@@ -87,7 +88,7 @@
                 personas.</descripcio>
             <imatge>magia-cerca.jpg</imatge>
             <tipusEntrades>
-                <tipusEntrada id="T15" nom="Platea" zona="Z1" preu="25.00" quota="30" />
+                <tipusEntrada id="T15" nom="Platea" zona="Z1" preu="20.00" quota="10" />
             </tipusEntrades>
         </esdeveniment>
 
@@ -98,10 +99,9 @@
             <descripcio>Una hora de cuentos, títeres y canciones para toda la familia.</descripcio>
             <imatge>bosque-encantado.jpg</imatge>
             <tipusEntrades>
-                <tipusEntrada id="T16" nom="Entrada infantil" zona="Z1" preu="8.00" quota="40" />
-                <tipusEntrada id="T17" nom="Entrada adulto" zona="Z1" preu="12.00" quota="40" />
-                <tipusEntrada id="T18" nom="Pack familiar (4 personas)" zona="Z1" preu="30.00"
-                    quota="15" />
+                <tipusEntrada id="T16" nom="Infantil" zona="Z1" preu="8.00" quota="10" />
+                <tipusEntrada id="T17" nom="Adulto" zona="Z1" preu="12.00" quota="10" />
+                <tipusEntrada id="T18" nom="Pista" zona="Z3" preu="10.00" quota="10" />
             </tipusEntrades>
         </esdeveniment>
 
@@ -112,8 +112,8 @@
             <descripcio>Versos de autores contemporáneos acompañados por piano en directo.</descripcio>
             <imatge>recital-poesia.jpg</imatge>
             <tipusEntrades>
-                <tipusEntrada id="T19" nom="Platea" zona="Z1" preu="15.00" quota="45" />
-                <tipusEntrada id="T20" nom="Dempeus" zona="Z2" preu="10.00" quota="8" />
+                <tipusEntrada id="T19" nom="Platea" zona="Z1" preu="15.00" quota="10" />
+                <tipusEntrada id="T20" nom="Balcó" zona="Z4" preu="10.00" quota="8" />
             </tipusEntrades>
         </esdeveniment>
 
@@ -125,11 +125,10 @@
                 función es igual.</descripcio>
             <imatge>improvisacion.jpg</imatge>
             <tipusEntrades>
-                <tipusEntrada id="T21" nom="Platea" zona="Z1" preu="20.00" quota="50" />
-                <tipusEntrada id="T22" nom="Platea reducida" zona="Z1" preu="16.00" quota="12" />
-                <tipusEntrada id="T23" nom="Dempeus" zona="Z2" preu="13.00" quota="40" />
-                <tipusEntrada id="T24" nom="Butaca preferente" zona="Z1" preu="26.00" quota="20" />
-                <tipusEntrada id="T25" nom="Abono dos funciones" zona="Z1" preu="34.00" quota="10" />
+                <tipusEntrada id="T21" nom="Platea" zona="Z1" preu="18.00" quota="10" />
+                <tipusEntrada id="T23" nom="Dempeus" zona="Z2" preu="12.00" quota="10" />
+                <tipusEntrada id="T24" nom="Pista" zona="Z3" preu="15.00" quota="10" />
+                <tipusEntrada id="T25" nom="Balcó" zona="Z4" preu="20.00" quota="8" />
             </tipusEntrades>
         </esdeveniment>
 
@@ -141,9 +140,9 @@
                 acústico.</descripcio>
             <imatge>acustico-cuerdas.jpg</imatge>
             <tipusEntrades>
-                <tipusEntrada id="T26" nom="Platea" zona="Z1" preu="24.00" quota="50" />
-                <tipusEntrada id="T27" nom="Zona preferente" zona="Z1" preu="32.00" quota="20" />
-                <tipusEntrada id="T28" nom="Dempeus" zona="Z2" preu="18.00" quota="40" />
+                <tipusEntrada id="T26" nom="Platea" zona="Z1" preu="18.00" quota="10" />
+                <tipusEntrada id="T27" nom="Balcó" zona="Z4" preu="20.00" quota="8" />
+                <tipusEntrada id="T28" nom="Dempeus" zona="Z2" preu="12.00" quota="10" />
             </tipusEntrades>
         </esdeveniment>
 
@@ -155,10 +154,10 @@
                 incluida.</descripcio>
             <imatge>gala-fin-ano.jpg</imatge>
             <tipusEntrades>
-                <tipusEntrada id="T29" nom="Platea" zona="Z1" preu="35.00" quota="40" />
-                <tipusEntrada id="T30" nom="Mesa VIP para dos" zona="Z1" preu="90.00" quota="10" />
-                <tipusEntrada id="T31" nom="Dempeus" zona="Z2" preu="25.00" quota="35" />
-                <tipusEntrada id="T32" nom="Entrada anticipada" zona="Z1" preu="30.00" quota="5" />
+                <tipusEntrada id="T29" nom="Platea" zona="Z1" preu="20.00" quota="10" />
+                <tipusEntrada id="T30" nom="Pista" zona="Z3" preu="18.00" quota="10" />
+                <tipusEntrada id="T31" nom="Dempeus" zona="Z2" preu="15.00" quota="10" />
+                <tipusEntrada id="T32" nom="Balcó" zona="Z4" preu="18.00" quota="8" />
             </tipusEntrades>
         </esdeveniment>
     </esdeveniments>

@@ -1,13 +1,18 @@
+
 package com.platea.server.reservas;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Types;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import com.google.gson.JsonArray;
@@ -37,6 +42,17 @@ public class ReservasManager {
         JsonObject respuesta = new JsonObject();
         respuesta.addProperty("type", "compraError");
         respuesta.addProperty("message", mensaje);
+
+        return respuesta.toString();
+    }
+
+    // Método para devolver las butacas que han fallado
+    private String crearErrorAsientos(String mensaje, JsonArray fallidos) {
+
+        JsonObject respuesta = new JsonObject();
+        respuesta.addProperty("type", "compraError");
+        respuesta.addProperty("message", mensaje);
+        respuesta.add("asientosFallidos", fallidos);
 
         return respuesta.toString();
     }
@@ -206,7 +222,8 @@ public class ReservasManager {
     // Método para guardar una entrada en la BD
     private void guardarEntrada(Connection conn, long compraId,
             String eventoId, TipoEntrada tipoEntrada,
-            String localizador, String titular) throws SQLException {
+            Integer asientoId, String localizador, String titular)
+            throws SQLException {
 
         String sql = "INSERT INTO ENTRADAS "
                 + "(compra_id, evento_id, tipo_entrada_id, asiento_id, "
@@ -220,7 +237,11 @@ public class ReservasManager {
             ps.setString(3, tipoEntrada.getId());
 
             // Las entradas generales no tienen asiento asignado
-            ps.setNull(4, java.sql.Types.INTEGER);
+            if (asientoId == null) {
+                ps.setNull(4, Types.INTEGER);
+            } else {
+                ps.setInt(4, asientoId);
+            }
 
             ps.setString(5, localizador);
             ps.setString(6, titular);
@@ -233,6 +254,90 @@ public class ReservasManager {
 
             ps.executeUpdate();
         }
+    }
+
+    // Comprobamos que una butaca existe y pertenece a la zona indicada
+    private boolean existeAsiento(Connection conn, int asientoId,
+            String zonaId) throws SQLException {
+
+        String sql = "SELECT 1 FROM ASIENTOS "
+                + "WHERE id = ? AND zona_id = ?";
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, asientoId);
+            ps.setString(2, zonaId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        }
+    }
+
+    // Comprobamos si una butaca ya está reservada o vendida para un evento
+    private boolean asientoOcupado(Connection conn, String eventoId,
+            int asientoId) throws SQLException {
+
+        String sql = "SELECT 1 FROM ENTRADAS "
+                + "WHERE evento_id = ? AND asiento_id = ? "
+                + "AND estado IN ('reservada', 'vendida') LIMIT 1";
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, eventoId);
+            ps.setInt(2, asientoId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        }
+    }
+
+    // Comprobamos si un localizador ya existe en SQLite
+    private boolean existeLocalizador(Connection conn, String localizador)
+            throws SQLException {
+
+        String sql = "SELECT 1 FROM ENTRADAS "
+                + "WHERE localizador = ? LIMIT 1";
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, localizador);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        }
+    }
+
+    // Generamos localizadores UUID de seis caracteres sin duplicados
+    private String generarLocalizador(Connection conn) throws SQLException {
+
+        for (int i = 0; i < 100; i++) {
+
+            String localizador = "ALT-"
+                    + UUID.randomUUID().toString().substring(0, 6).toUpperCase();
+
+            if (!existeLocalizador(conn, localizador)) {
+                return localizador;
+            }
+        }
+
+        throw new SQLException("No se ha podido generar un localizador único.");
+    }
+
+    // Añadimos una butaca con error a la respuesta
+    private void agregarAsientoFallido(JsonArray fallidos, String eventoId,
+            String tipoEntradaId, int asientoId, String motivo) {
+
+        JsonObject fallo = new JsonObject();
+
+        fallo.addProperty("eventoId", eventoId);
+        fallo.addProperty("tipoEntradaId", tipoEntradaId);
+        fallo.addProperty("asientoId", asientoId);
+        fallo.addProperty("motivo", motivo);
+
+        fallidos.add(fallo);
     }
 
     // Método principal para realizar la compra
@@ -252,8 +357,8 @@ public class ReservasManager {
                 return crearError("Faltan datos del comprador.");
             }
 
-            String nombre = request.get("nombre").getAsString();
-            String correo = request.get("correo").getAsString();
+            String nombre = request.get("nombre").getAsString().trim();
+            String correo = request.get("correo").getAsString().trim();
 
             if (nombre.isBlank() || correo.isBlank()) {
                 return crearError("El nombre o el correo están vacíos.");
@@ -281,6 +386,9 @@ public class ReservasManager {
             // Guardamos las entradas de la cesta una vez validadas
             ArrayList<JsonObject> entradasCompra = new ArrayList<>();
 
+            // Guardamos las butacas para detectar duplicados dentro de la cesta
+            Set<String> asientosSeleccionados = new HashSet<>();
+
             // ********** VALIDAR TODA LA COMPRA **********
 
             for (JsonElement elemento : entradas) {
@@ -293,33 +401,19 @@ public class ReservasManager {
 
                 // Comprobamos los campos obligatorios
                 if (!entrada.has("eventoId") || !entrada.has("tipoEntradaId")
-                        || !entrada.has("cantidad")
                         || !entrada.get("eventoId").isJsonPrimitive()
                         || !entrada.get("tipoEntradaId").isJsonPrimitive()
                         || !entrada.get("eventoId").getAsJsonPrimitive().isString()
-                        || !entrada.get("tipoEntradaId").getAsJsonPrimitive().isString()
-                        || !entrada.get("cantidad").isJsonPrimitive()
-                        || !entrada.get("cantidad").getAsJsonPrimitive().isNumber()) {
+                        || !entrada.get("tipoEntradaId").getAsJsonPrimitive().isString()) {
 
                     return crearError("Faltan datos de una entrada.");
                 }
 
-                String eventoId = entrada.get("eventoId").getAsString();
-                String tipoEntradaId = entrada.get("tipoEntradaId").getAsString();
+                String eventoId = entrada.get("eventoId").getAsString().trim();
+                String tipoEntradaId = entrada.get("tipoEntradaId").getAsString().trim();
 
-                int cantidad;
-
-                try {
-                    // Solo admitimos cantidades enteras y positivas
-                    cantidad = Integer.parseInt(
-                            entrada.get("cantidad").getAsString());
-
-                } catch (NumberFormatException e) {
-                    return crearError("La cantidad no es válida.");
-                }
-
-                if (cantidad <= 0) {
-                    return crearError("La cantidad debe ser mayor que cero.");
+                if (eventoId.isBlank() || tipoEntradaId.isBlank()) {
+                    return crearError("El evento o tipo de entrada está vacío.");
                 }
 
                 // Buscamos el evento en el catálogo SQLite
@@ -336,16 +430,87 @@ public class ReservasManager {
                     return crearError("No existe el tipo de entrada " + tipoEntradaId);
                 }
 
-                // Solo permitimos entradas generales
-                if (!esGeneral(evento, tipoEntrada)) {
-                    return crearError("Solo se pueden comprar entradas generales.");
-                }
-
                 // Buscamos la zona para comprobar también su aforo
                 Zona zona = buscarZona(evento, tipoEntrada);
 
                 if (zona == null) {
                     return crearError("No existe la zona del tipo de entrada.");
+                }
+
+                int cantidad;
+
+                if (esGeneral(evento, tipoEntrada)) {
+
+                    // ********** ENTRADA GENERAL **********
+
+                    if (!entrada.has("cantidad")
+                            || !entrada.get("cantidad").isJsonPrimitive()
+                            || !entrada.get("cantidad").getAsJsonPrimitive().isNumber()
+                            || entrada.has("asientoId")) {
+
+                        return crearError("La entrada general necesita una cantidad.");
+                    }
+
+                    try {
+                        // Solo admitimos cantidades enteras y positivas
+                        cantidad = Integer.parseInt(
+                                entrada.get("cantidad").getAsString());
+
+                    } catch (NumberFormatException e) {
+                        return crearError("La cantidad no es válida.");
+                    }
+
+                    if (cantidad <= 0) {
+                        return crearError("La cantidad debe ser mayor que cero.");
+                    }
+
+                } else if ("numerada".equalsIgnoreCase(zona.getTipus())) {
+
+                    // ********** ENTRADA NUMERADA **********
+
+                    if (!entrada.has("asientoId")
+                            || !entrada.get("asientoId").isJsonPrimitive()
+                            || !entrada.get("asientoId").getAsJsonPrimitive().isNumber()
+                            || entrada.has("cantidad")) {
+
+                        return crearError(
+                                "La entrada numerada necesita un asientoId y no admite cantidad.");
+                    }
+
+                    int asientoId;
+
+                    try {
+                        asientoId = Integer.parseInt(
+                                entrada.get("asientoId").getAsString());
+
+                    } catch (NumberFormatException e) {
+                        return crearError("El asientoId no es válido.");
+                    }
+
+                    if (asientoId <= 0) {
+                        return crearError("El asientoId debe ser positivo.");
+                    }
+
+                    // Comprobamos que la misma butaca no esté repetida en la cesta
+                    String claveAsiento = eventoId + "|" + asientoId;
+
+                    if (!asientosSeleccionados.add(claveAsiento)) {
+
+                        JsonArray fallidos = new JsonArray();
+
+                        agregarAsientoFallido(fallidos, eventoId,
+                                tipoEntradaId, asientoId,
+                                "La butaca está repetida en la cesta.");
+
+                        return crearErrorAsientos(
+                                "Hay butacas repetidas en la cesta.", fallidos);
+                    }
+
+                    // Una entrada numerada representa una única butaca
+                    cantidad = 1;
+
+                } else {
+                    return crearError("El tipo de zona no es válido.");
                 }
 
                 // Sumamos las cantidades si el mismo tipo aparece varias veces
@@ -376,11 +541,68 @@ public class ReservasManager {
             // Abrimos una única conexión para toda la compra
             try (Connection conn = DatabaseConnection.getConnection()) {
 
-                // Agrupamos las comprobaciones y las inserciones
-                // Si ocurre un error, se deshacen todos los cambios
-                conn.setAutoCommit(false);
+                // BEGIN IMMEDIATE obtiene la reserva de escritura al principio
+                // Evita que dos compras comprueben simultáneamente el mismo aforo
+                boolean transaccionIniciada = false;
 
                 try {
+
+                    try (Statement stmt = conn.createStatement()) {
+                        stmt.execute("PRAGMA busy_timeout = 5000");
+                        stmt.execute("BEGIN IMMEDIATE");
+                    }
+
+                    transaccionIniciada = true;
+
+                    // ********** COMPROBAR BUTACAS **********
+
+                    JsonArray asientosFallidos = new JsonArray();
+
+                    // Revisamos todas las butacas antes de guardar ninguna compra
+                    for (JsonObject entrada : entradasCompra) {
+
+                        if (!entrada.has("asientoId")) {
+                            continue;
+                        }
+
+                        String eventoId = entrada.get("eventoId").getAsString();
+                        String tipoEntradaId = entrada.get("tipoEntradaId").getAsString();
+                        int asientoId = entrada.get("asientoId").getAsInt();
+
+                        TipoEntrada tipoEntrada = tiposCompra.get(tipoEntradaId);
+                        Zona zona = buscarZona(
+                                catalogoDBReader.getEventos().get(eventoId),
+                                tipoEntrada);
+
+                        if (!existeAsiento(conn, asientoId, zona.getId())) {
+
+                            agregarAsientoFallido(asientosFallidos, eventoId,
+                                    tipoEntradaId, asientoId,
+                                    "La butaca no existe en la zona seleccionada.");
+
+                        } else if (asientoOcupado(conn, eventoId, asientoId)) {
+
+                            agregarAsientoFallido(asientosFallidos, eventoId,
+                                    tipoEntradaId, asientoId,
+                                    "La butaca ya está reservada o vendida.");
+                        }
+                    }
+
+                    if (asientosFallidos.size() > 0) {
+
+                        try (Statement stmt = conn.createStatement()) {
+                            stmt.execute("ROLLBACK");
+                        }
+
+                        transaccionIniciada = false;
+
+                        return crearErrorAsientos(
+                                "La compra se ha rechazado porque algunas butacas "
+                                        + "no están disponibles.",
+                                asientosFallidos);
+                    }
+
+                    // ********** COMPROBAR CUOTAS **********
 
                     // Comprobamos la cuota de cada tipo de entrada
                     for (String tipoEntradaId : solicitadoPorTipo.keySet()) {
@@ -395,8 +617,15 @@ public class ReservasManager {
 
                         if (solicitadoPorTipo.get(tipoEntradaId) > disponibles) {
 
-                            conn.rollback();
-                            return crearError("No hay suficientes entradas disponibles.");
+                            try (Statement stmt = conn.createStatement()) {
+                                stmt.execute("ROLLBACK");
+                            }
+
+                            transaccionIniciada = false;
+
+                            return crearError(
+                                    "No hay suficientes entradas disponibles "
+                                            + "del tipo " + tipoEntradaId + ".");
                         }
                     }
 
@@ -413,8 +642,15 @@ public class ReservasManager {
 
                         if (solicitadoPorZona.get(claveZona) > disponibles) {
 
-                            conn.rollback();
-                            return crearError("No hay suficientes entradas disponibles.");
+                            try (Statement stmt = conn.createStatement()) {
+                                stmt.execute("ROLLBACK");
+                            }
+
+                            transaccionIniciada = false;
+
+                            return crearError(
+                                    "No hay suficientes plazas disponibles "
+                                            + "en la zona " + zona.getId() + ".");
                         }
                     }
 
@@ -430,15 +666,24 @@ public class ReservasManager {
 
                         String eventoId = entrada.get("eventoId").getAsString();
                         String tipoEntradaId = entrada.get("tipoEntradaId").getAsString();
-                        int cantidad = Integer.parseInt(
-                                entrada.get("cantidad").getAsString());
 
                         TipoEntrada tipoEntrada = tiposCompra.get(tipoEntradaId);
+
+                        boolean numerada = entrada.has("asientoId");
+
+                        int cantidad = numerada
+                                ? 1
+                                : entrada.get("cantidad").getAsInt();
+
+                        Integer asientoId = numerada
+                                ? entrada.get("asientoId").getAsInt()
+                                : null;
 
                         // Generamos un localizador por cada entrada comprada
                         for (int i = 0; i < cantidad; i++) {
 
-                            String localizador = "ALT-" + UUID.randomUUID().toString();
+                            // Conservamos UUID.randomUUID() con seis caracteres
+                            String localizador = generarLocalizador(conn);
 
                             // Reserva que guardaremos en SQLite
                             guardarEntrada(
@@ -446,14 +691,24 @@ public class ReservasManager {
                                     compraId,
                                     eventoId,
                                     tipoEntrada,
+                                    asientoId,
                                     localizador,
                                     nombre);
 
                             // Localizador que devolveremos a la APP
                             JsonObject localizadorRespuesta = new JsonObject();
+
                             localizadorRespuesta.addProperty("eventoId", eventoId);
-                            localizadorRespuesta.addProperty("tipoEntradaId", tipoEntradaId);
-                            localizadorRespuesta.addProperty("localizador", localizador);
+                            localizadorRespuesta.addProperty(
+                                    "tipoEntradaId", tipoEntradaId);
+                            localizadorRespuesta.addProperty(
+                                    "localizador", localizador);
+
+                            // La respuesta también identifica la butaca comprada
+                            if (asientoId != null) {
+                                localizadorRespuesta.addProperty(
+                                        "asientoId", asientoId);
+                            }
 
                             localizadores.add(localizadorRespuesta);
                         }
@@ -462,7 +717,11 @@ public class ReservasManager {
                     // ********** GUARDAR LA COMPRA EN SQLITE **********
 
                     // Confirmamos todas las inserciones juntas
-                    conn.commit();
+                    try (Statement stmt = conn.createStatement()) {
+                        stmt.execute("COMMIT");
+                    }
+
+                    transaccionIniciada = false;
 
                     // ********** RESPUESTA CORRECTA **********
 
@@ -475,7 +734,14 @@ public class ReservasManager {
                 } catch (Exception e) {
 
                     // Si ocurre algún error, deshacemos toda la compra
-                    conn.rollback();
+                    if (transaccionIniciada) {
+                        try (Statement stmt = conn.createStatement()) {
+                            stmt.execute("ROLLBACK");
+                        } catch (SQLException rollbackError) {
+                            e.addSuppressed(rollbackError);
+                        }
+                    }
+
                     throw e;
                 }
             }
