@@ -1,4 +1,3 @@
-
 package com.platea.server.handler;
 
 import com.google.gson.JsonParser;
@@ -10,6 +9,7 @@ import com.platea.server.reservas.ReservasManager;
 import com.platea.server.database.CatalogoDBReader;
 import com.platea.server.database.MisEntradasDBReader;
 import com.platea.server.database.AsientosDBReader;
+import com.platea.server.database.DesktopDBService;
 
 import java.util.Collection;
 import java.util.List;
@@ -132,18 +132,12 @@ public class MessageHandler {
 
                         // Las zonas numeradas tienen filas y butacas por fila
                         if ("numerada".equalsIgnoreCase(z.getTipus())) {
-
                             zona.addProperty("filas", z.getFilas());
-                            zona.addProperty(
-                                    "asientosPorFila",
-                                    z.getAsientosPorFila());
-
+                            zona.addProperty("asientosPorFila", z.getAsientosPorFila());
                         } else {
-
                             // Las zonas generales no tienen asientos numerados
                             zona.add("filas", com.google.gson.JsonNull.INSTANCE);
-                            zona.add("asientosPorFila",
-                                    com.google.gson.JsonNull.INSTANCE);
+                            zona.add("asientosPorFila", com.google.gson.JsonNull.INSTANCE);
                         }
 
                         zonasArray.add(zona);
@@ -154,7 +148,6 @@ public class MessageHandler {
                 }
 
                 response.add("recintos", recintosArray);
-
                 return response.toString();
             }
 
@@ -181,23 +174,18 @@ public class MessageHandler {
                 }
 
                 Evento evento = catalogoDBReader.getEventos().get(eventoId);
-
                 if (evento == null) {
                     return createErrorResponse("No se ha encontrado ningún evento.");
                 }
 
                 List<TipoEntrada> listaTipoEntrada = evento.getTipusEntrades();
-
                 JsonObject response = new JsonObject();
                 response.addProperty("type", "tiposEntrada");
                 response.addProperty("eventoId", eventoId);
-
                 JsonArray tiposEntradaArray = new JsonArray();
 
                 for (TipoEntrada e : listaTipoEntrada) {
-
                     JsonObject entrada = new JsonObject();
-
                     entrada.addProperty("id", e.getId());
                     entrada.addProperty("nom", e.getNom());
                     entrada.addProperty("zona", e.getZona());
@@ -205,15 +193,11 @@ public class MessageHandler {
 
                     // Calculamos las entradas disponibles descontando las reservas
                     int disponibles;
-
                     try {
                         disponibles = reservasManager.getDisponibles(eventoId, e);
-
                     } catch (SQLException ex) {
-                        return createErrorResponse(
-                                "No se ha podido consultar la disponibilidad.");
+                        return createErrorResponse("No se ha podido consultar la disponibilidad.");
                     }
-
                     entrada.addProperty("disponibles", disponibles);
                     tiposEntradaArray.add(entrada);
                 }
@@ -226,10 +210,8 @@ public class MessageHandler {
 
             // Si type es comprarEntradas:
             else if (type.equals("comprarEntradas")) {
-
                 // Enviamos los datos al gestor de reservas
-                // Este comprueba la compra, genera los localizadores y guarda los datos en
-                // SQLite
+                // Este comprueba la compra, genera los localizadores y guarda los datos en SQLite
                 return reservasManager.comprarEntradas(request);
             }
 
@@ -237,34 +219,24 @@ public class MessageHandler {
 
             // Si type es getMisEntradas:
             else if (type.equals("getMisEntradas")) {
-
                 // Comprobamos que exista el correo y que sea una cadena de texto
                 if (!request.has("correo")
                         || !request.get("correo").isJsonPrimitive()
                         || !request.get("correo").getAsJsonPrimitive().isString()) {
                     return createErrorResponse("No se ha recibido un correo válido.");
                 }
-
                 String correo = request.get("correo").getAsString().trim();
-
-                // Comprobamos que el correo no esté vacío
                 if (correo.isBlank()) {
                     return createErrorResponse("El correo está vacío.");
                 }
-
                 try {
-                    // Consultamos las entradas asociadas al correo en SQLite
                     JsonArray entradas = MisEntradasDBReader.getMisEntradas(correo);
-
                     JsonObject response = new JsonObject();
                     response.addProperty("type", "misEntradas");
                     response.add("entradas", entradas);
-
                     return response.toString();
-
                 } catch (SQLException e) {
-                    return createErrorResponse(
-                            "No se han podido consultar las entradas del usuario.");
+                    return createErrorResponse("No se han podido consultar las entradas del usuario.");
                 }
             }
 
@@ -272,43 +244,79 @@ public class MessageHandler {
 
             // Si type es getAsientos:
             else if (type.equals("getAsientos")) {
-
-                // Comprobamos que exista el eventoId y sea un String
-                if (!request.has("eventoId")
-                        || !request.get("eventoId").isJsonPrimitive()
-                        || !request.get("eventoId").getAsJsonPrimitive().isString()) {
+                if (!tieneString(request, "eventoId")) {
                     return createErrorResponse("No se ha recibido un eventoId válido.");
                 }
-
-                // Comprobamos que exista el tipoEntradaId y sea un String
-                if (!request.has("tipoEntradaId")
-                        || !request.get("tipoEntradaId").isJsonPrimitive()
-                        || !request.get("tipoEntradaId").getAsJsonPrimitive().isString()) {
+                if (!tieneString(request, "tipoEntradaId")) {
                     return createErrorResponse("No se ha recibido un tipoEntradaId válido.");
                 }
-
                 String eventoId = request.get("eventoId").getAsString().trim();
                 String tipoEntradaId = request.get("tipoEntradaId").getAsString().trim();
-
-                // Comprobamos que los identificadores no estén vacíos
                 if (eventoId.isBlank() || tipoEntradaId.isBlank()) {
-                    return createErrorResponse(
-                            "El eventoId o el tipoEntradaId están vacíos.");
+                    return createErrorResponse("El eventoId o el tipoEntradaId están vacíos.");
                 }
-
                 try {
-                    // Consultamos el estado real de las butacas en SQLite
-                    JsonObject response = AsientosDBReader.getAsientos(
-                            eventoId, tipoEntradaId);
-
+                    JsonObject response = AsientosDBReader.getAsientos(eventoId, tipoEntradaId);
                     return response.toString();
-
                 } catch (IllegalArgumentException e) {
                     return createErrorResponse(e.getMessage());
-
                 } catch (SQLException e) {
-                    return createErrorResponse(
-                            "No se ha podido consultar el estado de las butacas.");
+                    return createErrorResponse("No se ha podido consultar el estado de las butacas.");
+                }
+            }
+
+            // ********** PETICIONES DEL DESKTOP **********
+
+            // Si type es getAforoZona:
+            else if (type.equals("getAforoZona")) {
+                if (!tieneString(request, "eventoId") || !tieneString(request, "zonaId")) {
+                    return createErrorResponse("Faltan eventoId o zonaId válidos.");
+                }
+                String eventoId = request.get("eventoId").getAsString().trim();
+                String zonaId = request.get("zonaId").getAsString().trim();
+                if (eventoId.isBlank() || zonaId.isBlank()) {
+                    return createErrorResponse("El eventoId o la zonaId están vacíos.");
+                }
+                try {
+                    return DesktopDBService.getAforoZona(eventoId, zonaId).toString();
+                } catch (IllegalArgumentException e) {
+                    return createErrorResponse(e.getMessage());
+                } catch (SQLException e) {
+                    return createErrorResponse("No se ha podido consultar el aforo de la zona.");
+                }
+            }
+
+            // Si type es getEntradasEvento:
+            else if (type.equals("getEntradasEvento")) {
+                if (!tieneString(request, "eventoId")) {
+                    return createErrorResponse("No se ha recibido un eventoId válido.");
+                }
+                String eventoId = request.get("eventoId").getAsString().trim();
+                if (eventoId.isBlank()) {
+                    return createErrorResponse("El eventoId está vacío.");
+                }
+                try {
+                    return DesktopDBService.getEntradasEvento(eventoId).toString();
+                } catch (IllegalArgumentException e) {
+                    return createErrorResponse(e.getMessage());
+                } catch (SQLException e) {
+                    return createErrorResponse("No se han podido consultar las entradas del evento.");
+                }
+            }
+
+            // Si type es validarEntrada:
+            else if (type.equals("validarEntrada")) {
+                if (!tieneString(request, "localizador")) {
+                    return createErrorResponse("No se ha recibido un localizador válido.");
+                }
+                String localizador = request.get("localizador").getAsString().trim();
+                if (localizador.isBlank()) {
+                    return createErrorResponse("El localizador está vacío.");
+                }
+                try {
+                    return DesktopDBService.validarEntrada(localizador).toString();
+                } catch (SQLException e) {
+                    return createErrorResponse("No se ha podido validar la entrada.");
                 }
             }
 
@@ -318,21 +326,22 @@ public class MessageHandler {
             }
 
         } catch (JsonParseException e) {
-            return createErrorResponse(
-                    "El mensaje recibido no contiene un JSON válido.");
+            return createErrorResponse("El mensaje recibido no contiene un JSON válido.");
         }
     }
 
     // **** MÉTODOS ÚTILES ****
 
+    private static boolean tieneString(JsonObject request, String campo) {
+        return request.has(campo) && request.get(campo).isJsonPrimitive()
+                && request.get(campo).getAsJsonPrimitive().isString();
+    }
+
     // Método para gestionar los type error de JSONs con mensaje personalizado.
     private static String createErrorResponse(String errorMessage) {
-
         JsonObject jsonError = new JsonObject();
-
         jsonError.addProperty("type", "error");
         jsonError.addProperty("message", errorMessage);
-
         return jsonError.toString();
     }
 }

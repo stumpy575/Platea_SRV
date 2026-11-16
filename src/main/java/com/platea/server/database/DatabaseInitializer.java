@@ -41,7 +41,6 @@ public class DatabaseInitializer {
 
                 // Creamos las tablas utilizando schema.sql
                 crearTablas(conn);
-
                 System.out.println("Tablas SQLite creadas correctamente.");
 
             } else if (tablas != 7) {
@@ -51,6 +50,10 @@ public class DatabaseInitializer {
                         "La base de datos está incompleta. "
                                 + "Se han encontrado " + tablas + " de 7 tablas.");
             }
+
+            // Nueva tabla auxiliar para registrar entradas validadas.
+            // CREATE IF NOT EXISTS conserva intactas las compras anteriores.
+            crearTablaValidaciones(conn);
         }
 
         // Comprobamos si el catálogo ya contiene datos
@@ -69,7 +72,6 @@ public class DatabaseInitializer {
                 // Comprobamos que no existan compras anteriores
                 if (contarRegistros(conn, "COMPRAS") > 0
                         || contarRegistros(conn, "ENTRADAS") > 0) {
-
                     throw new SQLException(
                             "Existen compras sin un catálogo inicializado.");
                 }
@@ -82,22 +84,29 @@ public class DatabaseInitializer {
                 return;
 
             } else {
-
                 // Evitamos modificar un catálogo parcialmente cargado
-                throw new SQLException(
-                        "El catálogo SQLite está incompleto.");
+                throw new SQLException("El catálogo SQLite está incompleto.");
             }
         }
 
         // Importamos el XML mediante el método que ya tenemos
         MigracionXmlDB.migrar();
-
         System.out.println("Catálogo XML migrado correctamente a SQLite.");
     }
 
-    // Método para contar las tablas de Altea
-    private static int contarTablas(Connection conn) throws SQLException {
+    // Crear tabla auxiliar de validaciones tanto en BD nueva como existente
+    private static void crearTablaValidaciones(Connection conn) throws SQLException {
+        String sql = "CREATE TABLE IF NOT EXISTS VALIDACIONES ("
+                + "entrada_id INTEGER PRIMARY KEY, "
+                + "fecha TEXT NOT NULL, "
+                + "FOREIGN KEY (entrada_id) REFERENCES ENTRADAS(id))";
+        try (Statement stmt = conn.createStatement()) {
+            stmt.execute(sql);
+        }
+    }
 
+    // Método para contar las siete tablas principales de Altea
+    private static int contarTablas(Connection conn) throws SQLException {
         String sql = "SELECT COUNT(*) FROM sqlite_master "
                 + "WHERE type = 'table' "
                 + "AND name IN ('RECINTOS', 'ZONAS', 'ASIENTOS', "
@@ -105,74 +114,49 @@ public class DatabaseInitializer {
 
         try (PreparedStatement ps = conn.prepareStatement(sql);
                 ResultSet rs = ps.executeQuery()) {
-
             if (rs.next()) {
                 return rs.getInt(1);
             }
         }
-
         return 0;
     }
 
     // Método para contar los registros de una tabla
     private static int contarRegistros(Connection conn, String tabla)
             throws SQLException {
-
         String sql = "SELECT COUNT(*) FROM " + tabla;
-
         try (PreparedStatement ps = conn.prepareStatement(sql);
                 ResultSet rs = ps.executeQuery()) {
-
             if (rs.next()) {
                 return rs.getInt(1);
             }
         }
-
         return 0;
     }
 
     // Método para crear las tablas utilizando schema.sql
     private static void crearTablas(Connection conn)
             throws SQLException, IOException {
-
         Path archivo = Path.of("database", "schema.sql");
-
-        // Comprobamos que exista el archivo SQL
         if (!Files.exists(archivo)) {
             throw new IOException("No se ha encontrado database/schema.sql");
         }
-
-        // Leemos las instrucciones SQL
         String contenido = Files.readString(archivo);
-
-        // Separamos las instrucciones por punto y coma
         String[] instrucciones = contenido.split(";");
-
-        // Agrupamos la creación de tablas en una transacción
         conn.setAutoCommit(false);
-
         try (Statement stmt = conn.createStatement()) {
-
             for (String instruccion : instrucciones) {
-
                 String sql = instruccion.trim();
-
                 if (!sql.isEmpty()) {
                     stmt.execute(sql);
                 }
             }
-
-            // Comprobamos que se hayan creado las siete tablas
             if (contarTablas(conn) != 7) {
                 throw new SQLException(
                         "No se han creado correctamente las siete tablas.");
             }
-
             conn.commit();
-
         } catch (SQLException e) {
-
-            // Deshacemos los cambios si falla la creación
             conn.rollback();
             throw e;
         }

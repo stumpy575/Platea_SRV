@@ -130,3 +130,14 @@ CREATE UNIQUE INDEX IF NOT EXISTS asiento_ocupado
 ON ENTRADAS(evento_id, asiento_id)
 WHERE asiento_id IS NOT NULL
 AND estado IN ('reservada', 'vendida');
+
+
+-- ==========================================
+-- TABLA: VALIDACIONEs
+-- ==========================================
+
+CREATE TABLE IF NOT EXISTS VALIDACIONES (
+    entrada_id INTEGER PRIMARY KEY,
+    fecha TEXT NOT NULL,
+    FOREIGN KEY (entrada_id) REFERENCES ENTRADAS(id)
+);
