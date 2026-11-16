@@ -1,11 +1,15 @@
+
 package com.platea.server.handler;
 
 import com.google.gson.JsonParser;
 import com.platea.server.model.Evento;
 import com.platea.server.model.TipoEntrada;
+import com.platea.server.model.Recinto;
+import com.platea.server.model.Zona;
 import com.platea.server.reservas.ReservasManager;
 import com.platea.server.database.CatalogoDBReader;
 import com.platea.server.database.MisEntradasDBReader;
+import com.platea.server.database.AsientosDBReader;
 
 import java.util.Collection;
 import java.util.List;
@@ -90,6 +94,67 @@ public class MessageHandler {
                 }
 
                 response.add("eventos", eventosArray);
+                return response.toString();
+            }
+
+            // ********** CONSULTAR RECINTOS Y ZONAS **********
+
+            // Si type es getRecintos:
+            else if (type.equals("getRecintos")) {
+
+                // Recuperamos los recintos cargados desde SQLite
+                Collection<Recinto> values = catalogoDBReader.getRecintos().values();
+
+                JsonObject response = new JsonObject();
+                response.addProperty("type", "recintos");
+
+                JsonArray recintosArray = new JsonArray();
+
+                // Recorremos todos los recintos
+                for (Recinto r : values) {
+
+                    JsonObject recinto = new JsonObject();
+
+                    recinto.addProperty("id", r.getId());
+                    recinto.addProperty("nombre", r.getNom());
+
+                    JsonArray zonasArray = new JsonArray();
+
+                    // Recorremos todas las zonas del recinto
+                    for (Zona z : r.getZones()) {
+
+                        JsonObject zona = new JsonObject();
+
+                        zona.addProperty("id", z.getId());
+                        zona.addProperty("nombre", z.getNom());
+                        zona.addProperty("tipo", z.getTipus());
+                        zona.addProperty("aforo", z.getAforament());
+
+                        // Las zonas numeradas tienen filas y butacas por fila
+                        if ("numerada".equalsIgnoreCase(z.getTipus())) {
+
+                            zona.addProperty("filas", z.getFilas());
+                            zona.addProperty(
+                                    "asientosPorFila",
+                                    z.getAsientosPorFila());
+
+                        } else {
+
+                            // Las zonas generales no tienen asientos numerados
+                            zona.add("filas", com.google.gson.JsonNull.INSTANCE);
+                            zona.add("asientosPorFila",
+                                    com.google.gson.JsonNull.INSTANCE);
+                        }
+
+                        zonasArray.add(zona);
+                    }
+
+                    recinto.add("zonas", zonasArray);
+                    recintosArray.add(recinto);
+                }
+
+                response.add("recintos", recintosArray);
+
                 return response.toString();
             }
 
@@ -200,6 +265,50 @@ public class MessageHandler {
                 } catch (SQLException e) {
                     return createErrorResponse(
                             "No se han podido consultar las entradas del usuario.");
+                }
+            }
+
+            // ********** CONSULTAR BUTACAS NUMERADAS **********
+
+            // Si type es getAsientos:
+            else if (type.equals("getAsientos")) {
+
+                // Comprobamos que exista el eventoId y sea un String
+                if (!request.has("eventoId")
+                        || !request.get("eventoId").isJsonPrimitive()
+                        || !request.get("eventoId").getAsJsonPrimitive().isString()) {
+                    return createErrorResponse("No se ha recibido un eventoId válido.");
+                }
+
+                // Comprobamos que exista el tipoEntradaId y sea un String
+                if (!request.has("tipoEntradaId")
+                        || !request.get("tipoEntradaId").isJsonPrimitive()
+                        || !request.get("tipoEntradaId").getAsJsonPrimitive().isString()) {
+                    return createErrorResponse("No se ha recibido un tipoEntradaId válido.");
+                }
+
+                String eventoId = request.get("eventoId").getAsString().trim();
+                String tipoEntradaId = request.get("tipoEntradaId").getAsString().trim();
+
+                // Comprobamos que los identificadores no estén vacíos
+                if (eventoId.isBlank() || tipoEntradaId.isBlank()) {
+                    return createErrorResponse(
+                            "El eventoId o el tipoEntradaId están vacíos.");
+                }
+
+                try {
+                    // Consultamos el estado real de las butacas en SQLite
+                    JsonObject response = AsientosDBReader.getAsientos(
+                            eventoId, tipoEntradaId);
+
+                    return response.toString();
+
+                } catch (IllegalArgumentException e) {
+                    return createErrorResponse(e.getMessage());
+
+                } catch (SQLException e) {
+                    return createErrorResponse(
+                            "No se ha podido consultar el estado de las butacas.");
                 }
             }
 
