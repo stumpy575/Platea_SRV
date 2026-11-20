@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cataleg>
+    <!-- Recintes amb les seves zones -->
+    <recintes>
+        <recinte id="R1" nom="Sala Petita">
+            <zona id="Z1" nom="Platea" tipus="numerada" aforament="60" filas="6"
+                asientosPorFila="10" />
+            <zona id="Z2" nom="Dempeus" tipus="general" aforament="40" />
+            <zona id="Z3" nom="Pista" tipus="general" aforament="20" />
+            <zona id="Z4" nom="Balcó" tipus="numerada" aforament="24" filas="3"
+                asientosPorFila="8" />
+        </recinte>
+    </recintes>
+
+    <!-- Esdeveniments: cadascun indica el recinte on es fa -->
+    <esdeveniments>
+        <esdeveniment id="E1" recinte="R1">
+            <nom>Coses que no es diuen en un sopar</nom>
+            <dataHora>2026-11-21T21:30</dataHora>
+            <categoria>Monòleg</categoria>
+            <descripcio>Una hora d'humor sobre les converses incòmodes de cada dia.</descripcio>
+            <imatge>monoleg-sopar.jpg</imatge>
+            <tipusEntrades>
+                <tipusEntrada id="T1" nom="Platea" zona="Z1" preu="18.00" quota="60" />
+                <tipusEntrada id="T3" nom="Pista" zona="Z3" preu="12.00" quota="20" />
+            </tipusEntrades>
+        </esdeveniment>
+
+        <esdeveniment id="E2" recinte="R1">
+            <nom>Monólogos de Sobremesa: Historias que Nunca Contarías en una Cena Familiar</nom>
+            <dataHora>2026-11-13T21:00</dataHora>
+            <categoria>Monólogo</categoria>
+            <descripcio>Dos cómicos se enfrentan en un duelo de improvisación con el público como
+                jurado.</descripcio>
+            <imatge>duelo-monologos.jpg</imatge>
+            <tipusEntrades>
+                <tipusEntrada id="T4" nom="Dempeus" zona="Z2" preu="12.00" quota="40" />
+                <tipusEntrada id="T5" nom="Platea" zona="Z1" preu="16.00" quota="60" />
+                <tipusEntrada id="T6" nom="Balcó" zona="Z4" preu="13.00" quota="24" />
+            </tipusEntrades>
+        </esdeveniment>
+
+        <esdeveniment id="E3" recinte="R1">
+            <nom>Noche de Jazz y Vinilo</nom>
+            <dataHora>2026-11-20T20:30</dataHora>
+            <categoria>Música</categoria>
+            <descripcio>Un cuarteto de jazz interpreta clásicos de los años cincuenta en un ambiente
+                cercano.</descripcio>
+            <imatge>jazz-vinilo.jpg</imatge>
+            <tipusEntrades>
+                <tipusEntrada id="T7" nom="Platea" zona="Z1" preu="18.00" quota="60" />
+                <tipusEntrada id="T8" nom="Pista" zona="Z3" preu="12.00" quota="20" />
+            </tipusEntrades>
+        </esdeveniment>
+
+        <esdeveniment id="E4" recinte="R1">
+            <nom>Microteatro: Cinco Historias Cortas</nom>
+            <dataHora>2026-11-28T19:30</dataHora>
+            <categoria>Teatro</categoria>
+            <descripcio>Cinco piezas breves de diez minutos cada una recorren el humor, el drama y
+                la sorpresa. El público cambia de sala entre historia e historia y descubre un final
+                distinto en cada pase.</descripcio>
+            <imatge>microteatro.jpg</imatge>
+            <tipusEntrades>
+                <tipusEntrada id="T9" nom="Platea" zona="Z1" preu="18.00" quota="60" />
+                <tipusEntrada id="T11" nom="Dempeus" zona="Z2" preu="12.00" quota="40" />
+                <tipusEntrada id="T12" nom="Balcó" zona="Z4" preu="20.00" quota="24" />
+            </tipusEntrades>
+        </esdeveniment>
+
+        <esdeveniment id="E5" recinte="R1">
+            <nom>Danza Contemporánea: Cuerpos en Movimiento</nom>
+            <dataHora>2026-12-05T21:00</dataHora>
+            <categoria>Danza</categoria>
+            <descripcio>Seis bailarines exploran el movimiento y el espacio con música en directo.</descripcio>
+            <imatge>danza-contemporanea.jpg</imatge>
+            <tipusEntrades>
+                <tipusEntrada id="T13" nom="Platea" zona="Z1" preu="18.00" quota="60" />
+                <tipusEntrada id="T14" nom="Dempeus" zona="Z2" preu="12.00" quota="40" />
+            </tipusEntrades>
+        </esdeveniment>
+
+        <esdeveniment id="E6" recinte="R1">
+            <nom>Magia de Cerca: Sesión Íntima</nom>
+            <dataHora>2026-12-09T19:00</dataHora>
+            <categoria>Magia</categoria>
+            <descripcio>Un mago presenta una sesión íntima de ilusiones y magia de cerca para el
+                público.</descripcio>
+            <imatge>magia-cerca.jpg</imatge>
+            <tipusEntrades>
+                <tipusEntrada id="T15" nom="Platea" zona="Z1" preu="20.00" quota="60" />
+            </tipusEntrades>
+        </esdeveniment>
+
+        <esdeveniment id="E7" recinte="R1">
+            <nom>Cuentacuentos: El Bosque Encantado</nom>
+            <dataHora>2026-11-22T12:00</dataHora>
+            <categoria>Infantil</categoria>
+            <descripcio>Una hora de cuentos, títeres y canciones para toda la familia.</descripcio>
+            <imatge>bosque-encantado.jpg</imatge>
+            <tipusEntrades>
+                <tipusEntrada id="T16" nom="Platea" zona="Z1" preu="8.00" quota="60" />
+                <tipusEntrada id="T17" nom="Dempeus" zona="Z2" preu="12.00" quota="40" />
+                <tipusEntrada id="T18" nom="Pista" zona="Z3" preu="10.00" quota="20" />
+            </tipusEntrades>
+        </esdeveniment>
+
+        <esdeveniment id="E8" recinte="R1">
+            <nom>Recital de Poesía y Piano</nom>
+            <dataHora>2026-12-12T20:00</dataHora>
+            <categoria>Poesía</categoria>
+            <descripcio>Versos de autores contemporáneos acompañados por piano en directo.</descripcio>
+            <imatge>recital-poesia.jpg</imatge>
+            <tipusEntrades>
+                <tipusEntrada id="T19" nom="Platea" zona="Z1" preu="15.00" quota="60" />
+                <tipusEntrada id="T20" nom="Balcó" zona="Z4" preu="10.00" quota="24" />
+            </tipusEntrades>
+        </esdeveniment>
+
+        <esdeveniment id="E9" recinte="R1">
+            <nom>Improvisación Total: Comedia sin Guion</nom>
+            <dataHora>2026-12-19T22:00</dataHora>
+            <categoria>Comedia</categoria>
+            <descripcio>El público propone situaciones y los actores improvisan sin red. Ninguna
+                función es igual.</descripcio>
+            <imatge>improvisacion.jpg</imatge>
+            <tipusEntrades>
+                <tipusEntrada id="T21" nom="Platea" zona="Z1" preu="18.00" quota="60" />
+                <tipusEntrada id="T23" nom="Dempeus" zona="Z2" preu="12.00" quota="40" />
+                <tipusEntrada id="T24" nom="Pista" zona="Z3" preu="15.00" quota="20" />
+                <tipusEntrada id="T25" nom="Balcó" zona="Z4" preu="20.00" quota="24" />
+            </tipusEntrades>
+        </esdeveniment>
+
+        <esdeveniment id="E10" recinte="R1">
+            <nom>Concierto Acústico: Voces y Cuerdas</nom>
+            <dataHora>2026-12-27T20:30</dataHora>
+            <categoria>Música</categoria>
+            <descripcio>Guitarra, violonchelo y tres voces revisan clásicos del pop en formato
+                acústico.</descripcio>
+            <imatge>acustico-cuerdas.jpg</imatge>
+            <tipusEntrades>
+                <tipusEntrada id="T26" nom="Platea" zona="Z1" preu="18.00" quota="60" />
+                <tipusEntrada id="T27" nom="Balcó" zona="Z4" preu="20.00" quota="24" />
+                <tipusEntrada id="T28" nom="Dempeus" zona="Z2" preu="12.00" quota="40" />
+            </tipusEntrades>
+        </esdeveniment>
+
+        <esdeveniment id="E11" recinte="R1">
+            <nom>Gala de Fin de Año: Humor y Música</nom>
+            <dataHora>2026-12-31T22:30</dataHora>
+            <categoria>Monólogo</categoria>
+            <descripcio>Despedimos el año con monólogos, música en directo y una copa de cava
+                incluida.</descripcio>
+            <imatge>gala-fin-ano.jpg</imatge>
+            <tipusEntrades>
+                <tipusEntrada id="T29" nom="Platea" zona="Z1" preu="20.00" quota="60" />
+                <tipusEntrada id="T30" nom="Pista" zona="Z3" preu="18.00" quota="20" />
+                <tipusEntrada id="T31" nom="Dempeus" zona="Z2" preu="15.00" quota="40" />
+                <tipusEntrada id="T32" nom="Balcó" zona="Z4" preu="18.00" quota="24" />
+            </tipusEntrades>
+        </esdeveniment>
+    </esdeveniments>
+</cataleg>
